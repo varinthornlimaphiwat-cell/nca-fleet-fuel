@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCA Fleet Fuel Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nca: {
+                            blue: '#1D4ED8',
+                            dark: '#0F172A',
+                            accent: '#2563EB',
+                            light: '#F8FAFC',
+                            card: '#FFFFFF'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Sarabun', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #E2E8F0;
+        }
+        .dash-card {
+            background: #FFFFFF;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .dash-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        .login-backdrop {
+            background-image: linear-gradient(115deg, rgba(2, 6, 23, .62), rgba(15, 23, 42, .42)), url('https://wallpaperaccess.com/full/846241.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        .sidebar-tab {
+            position: absolute;
+            right: -28px;
+            width: 28px;
+            height: 82px;
+            background: #2563EB;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .sidebar-tab:hover {
+            transform: scaleX(1.15);
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 min-h-screen text-slate-800 flex items-center justify-center">
+    <!-- 🔐 หน้า Login (แสดงขึ้นมาบังหน้าจอก่อน ถ้ายังไม่ล็อกอิน) -->
+    <div id="login-container" class="login-backdrop fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl p-8 w-full max-w-md shadow-2xl border border-white/50 text-center">
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-2">NCA Fleet Fuel</h2>
+            <p class="text-xs text-slate-500 mb-6">กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับอนุญาต</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล / ชื่อผู้ใช้งาน</label>
+                    <input type="text" id="login-email" placeholder="driver01@nca.com" required 
+                           class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required 
+                           class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 rounded-xl shadow-md transition">
+                    เข้าสู่ระบบ (Login)
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Outer Frame Window (Dashboard หลัก ถูกครอบไว้) -->
+    <div id="dashboard-container" class="hidden w-full max-w-[1550px] bg-slate-200/90 rounded-[2.5rem] p-4 md:p-6 shadow-2xl relative border border-white/60">
+        
+        <!-- SIDEBAR DECORATIVE TABS -->
+        <div class="hidden lg:block absolute right-0 top-24 z-20 flex flex-col gap-4">
+            <div onclick="switchPage('overview')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchPage('overview')" class="sidebar-tab top-0 shadow-md flex items-center justify-center text-white" title="หน้าหลัก">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 ml-1.5"></i>
+            </div>
+            <div onclick="switchPage('history')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchPage('history')" class="sidebar-tab top-24 bg-blue-400 shadow-md flex items-center justify-center text-white opacity-80 hover:opacity-100" title="ประวัติรายลูป">
+                <i data-lucide="file-text" class="w-5 h-5 ml-1.5"></i>
+            </div>
+        </div>
+
+        <!-- TOP HEADER AREA -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 px-2 gap-3">
+            <div class="flex items-baseline gap-4">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 font-serif">NCA_Fleet_Fuel</h1>
+                <span class="text-xs md:text-sm font-medium text-slate-500 bg-slate-300/60 px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    อัปเดตข้อมูลวันที่ <span id="last-updated-time" class="font-semibold text-slate-700">กำลังโหลด...</span>
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="data-source-badge" class="text-xs bg-amber-100 text-amber-800 border border-amber-300 font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i> Mock Data Mode
+                </span>
+                <button onclick="handleLogout()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-rose-200 shadow-sm flex items-center gap-1.5 transition">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <div id="page-overview" class="bg-slate-100/90 rounded-[1.8rem] p-4 md:p-5 shadow-inner border border-white/80 space-y-4">
+            
+            <!-- TOP SECTION: FILTER & RATE -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <!-- FILTER PANEL (9 Cols) -->
+                <div class="lg:col-span-9 dash-card p-4 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i data-lucide="filter" class="w-4 h-4 text-blue-600"></i>
+                        <h2 class="font-bold text-slate-700 text-lg">Filter / ตัวกรองค้นหาข้อมูล</h2>
+                        <span class="text-xs text-slate-400 font-normal">(รายชื่อ, เบอร์รถ, ช่วงเดือน)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <!-- Vehicle / NuMBER Filter -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">เบอร์รถ / NuMBER</label>
+                            <select id="filter-number" onchange="applyFilters()" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="ALL">-- เบอร์รถทั้งหมด --</option>
+                            </select>
+                        </div>
+
+                        <!-- Driver / Staff Filter -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่อพนักงานขับรถ</label>
+                            <select id="filter-driver" onchange="applyFilters()" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="ALL">-- พนักงานทั้งหมด --</option>
+                            </select>
+                        </div>
+
+                        <!-- Month Filter -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">เดือน (Month)</label>
+                            <select id="filter-month" onchange="applyFilters()" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="ALL">-- ทุกเดือน --</option>
+                            </select>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <div class="flex items-end">
+                            <button onclick="resetFilters()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs py-2.5 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> รีเซ็ตตัวกรอง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RATE SUMMARY CARD (3 Cols)[cite: 3] -->
+                <div class="lg:col-span-3 dash-card p-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-15">
+                        <i data-lucide="gauge" class="w-32 h-32"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-medium text-blue-200 uppercase tracking-wider">Overall Rate (KM/L)</span>
+                        <h3 class="text-xl font-bold mt-1">อัตราสิ้นเปลืองรวม</h3>
+                    </div>
+                    <div class="my-2">
+                        <div class="flex items-baseline gap-2">
+                            <span id="card-rate-value" class="text-4xl font-extrabold tracking-tight">0.00</span>
+                            <span class="text-sm text-blue-200 font-medium">กม./ลิตร</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-blue-100 border-t border-blue-400/40 pt-2">
+                        <span>เกณฑ์มาตรฐาน: <b>4.00+</b></span>
+                        <span id="rate-status-tag" class="bg-emerald-400/20 text-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">เกณฑ์ดี</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDDLE SECTION: BAR CHART & METRICS -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                
+                <!-- LEFT: BAR CHART MONTH (Rate แยกรายเดือน) (7 Cols)[cite: 3] -->
+                <div class="lg:col-span-7 dash-card p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">Bar Chart month (Rate รายเดือน)</h3>
+                            <p class="text-xs text-slate-400">อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน</p>
+                        </div>
+                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium">Monthly Rate</span>
+                    </div>
+                    <div class="relative w-full h-[240px]">
+                        <canvas id="chartMonthRate"></canvas>
+                    </div>
+                </div>
+
+                <!-- RIGHT: DISTANCE, FUEL, NUMBER OF TRIPS (5 Cols)[cite: 3] -->
+                <div class="lg:col-span-5 grid grid-cols-3 gap-2">
+                    <div class="lg:col-span-3 dash-card p-3 flex items-center justify-between border-l-4 border-blue-500">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Distance (ระยะทางรวม)</p>
+                            <h4 id="kpi-distance" class="text-2xl font-extrabold text-slate-800 mt-1">0</h4>
+                            <span class="text-xs text-slate-400">กิโลเมตร (KM)</span>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="map-pin" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-3 dash-card p-3 flex items-center justify-between border-l-4 border-amber-500">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Fuel (ปริมาณน้ำมันรวม)</p>
+                            <h4 id="kpi-fuel" class="text-2xl font-extrabold text-slate-800 mt-1">0</h4>
+                            <span class="text-xs text-slate-400">ลิตร (Liters)</span>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="fuel" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="dash-card p-2 border-l-4 border-emerald-500 min-w-0 flex flex-col justify-center">
+                        <p class="text-[10px] leading-tight font-bold text-slate-400 uppercase tracking-wide">รถที่ผ่าน</p>
+                        <div class="mt-1 whitespace-nowrap"><span id="vehicle-pass-count" class="text-lg font-extrabold text-emerald-600">0</span><span class="text-[10px] text-slate-500"> / <span id="vehicle-pass-total">0</span> คัน</span></div>
+                        <p class="text-xs font-bold text-emerald-600"><span id="vehicle-pass-percent">0.0%</span></p>
+                    </div>
+                    <div class="dash-card p-2 border-l-4 border-blue-500 min-w-0 flex flex-col justify-center">
+                        <p class="text-[10px] leading-tight font-bold text-slate-400 uppercase tracking-wide">คนที่ผ่าน</p>
+                        <div class="mt-1 whitespace-nowrap"><span id="driver-pass-count" class="text-lg font-extrabold text-blue-600">0</span><span class="text-[10px] text-slate-500"> / <span id="driver-pass-total">0</span> คน</span></div>
+                        <p class="text-xs font-bold text-blue-600"><span id="driver-pass-percent">0.0%</span></p>
+                    </div>
+                    <div class="dash-card p-2 border-l-4 border-emerald-500 min-w-0 flex flex-col justify-center">
+                        <p class="text-[10px] leading-tight font-bold text-slate-400 uppercase tracking-wide">Number of Trips</p>
+                        <h4 id="kpi-trips" class="text-xl font-extrabold text-slate-800 mt-1">0</h4>
+                        <span class="text-[10px] leading-tight text-slate-400">จำนวนเที่ยว</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM SECTION: DONUT, HISTOGRAM, TOP/BOTTOM 10 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4">
+                
+                <!-- DONUT GRAPH PASS/UNPASS (>= 4.00) (4 Cols)[cite: 3] -->
+                <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Donut Graph Pass/Unpass</h3>
+                        <p class="text-[11px] text-slate-400 whitespace-nowrap">ผ่าน / ไม่ผ่านเกณฑ์</p>
+                    </div>
+                    <div class="relative w-full h-[190px] flex items-center justify-center my-2">
+                        <canvas id="chartDonutPass"></canvas>
+                    </div>
+                    <div class="flex justify-center gap-3 text-[10px] whitespace-nowrap font-semibold">
+                </div>
+                </div>
+
+                <!-- HISTOGRAM (Rate Distribution per Trip) (4 Cols)[cite: 3] -->
+                <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Histogram</h3>
+                        <p class="text-xs text-slate-400">การกระจายตัวของ Rate แต่ละ Trip ว่าส่วนใหญ่อยู่ช่วงไหน</p>
+                    </div>
+                    <div class="relative w-full h-[190px] my-2">
+                        <canvas id="chartHistogram"></canvas>
+                    </div>
+                    <p class="text-[11px] text-center text-slate-400">ช่วงเรทกิโลเมตรต่อลิตร (KM/L)</p>
+                </div>
+
+                <!-- TOP 10 / BOTTOM 10 (4 Cols)[cite: 3] -->
+                <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-slate-800 text-base">Top 10 / Bottom 10</h3>
+                        <div class="flex bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
+                            <button id="btn-top10" onclick="switchRankTab('top')" class="px-2.5 py-1 rounded-md bg-white shadow-sm font-bold text-blue-600 transition">Top 10</button>
+                            <button id="btn-bot10" onclick="switchRankTab('bottom')" class="px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 transition">Bottom 10</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-y-auto max-h-[200px] pr-1">
+                        <table class="w-full text-left text-xs">
+                            <thead class="text-[10px] text-slate-400 uppercase bg-slate-50 sticky top-0">
+                                <tr>
+                                    <th class="py-1 px-1">#</th>
+                                    <th class="py-1 px-1">เบอร์รถ / พนักงาน</th>
+                                    <th class="py-1 px-1 text-right">Rate (KM/L)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rank-table-body" class="divide-y divide-slate-100 font-medium">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 text-right mt-1">
+                        จัดอันดับตามประสิทธิภาพ Trip
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div id="page-history" class="hidden bg-slate-100/90 rounded-[1.8rem] p-4 md:p-5 shadow-inner border border-white/80 space-y-4">
+          <section class="dash-card p-4">
+            <h2 class="font-bold text-slate-800 text-lg mb-3">Filter ประวัติรายลูป</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหาเบอร์รถ / ชื่อพนักงาน</label><input id="history-search" oninput="renderHistory()" placeholder="พิมพ์เบอร์รถหรือชื่อ..." class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์รถ</label><select id="history-number" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- เบอร์รถทั้งหมด --</option></select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อพนักงาน</label><select id="history-driver" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- พนักงานทั้งหมด --</option></select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เดือน</label><select id="history-month" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- ทุกเดือน --</option></select></div>
+              <div class="flex items-end"><button onclick="resetHistoryFilters()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-sm py-2.5 rounded-lg">รีเซ็ตตัวกรอง</button></div>
+            </div><p id="history-data-note" class="text-xs text-slate-500 mt-3">กำลังโหลดประวัติ...</p>
+          </section>
+          <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div class="dash-card p-4 border-l-4 border-blue-500"><p class="text-xs text-slate-500 font-bold">ระยะทางทั้งหมด (KM)</p><div id="history-total-km" class="text-2xl font-extrabold">0</div></div>
+            <div class="dash-card p-4 border-l-4 border-amber-400"><p class="text-xs text-slate-500 font-bold">น้ำมันทั้งหมด (ลิตร)</p><div id="history-total-fuel" class="text-2xl font-extrabold">0</div></div>
+            <div class="dash-card p-4 border-l-4 border-indigo-500"><p class="text-xs text-slate-500 font-bold">จำนวนลูป (Trip Number)</p><div id="history-total-trips" class="text-2xl font-extrabold">0</div><p id="history-type-summary" class="text-xs text-slate-500 mt-1">Full: 0 | Mixed: 0</p></div>
+            <div class="dash-card p-4 border-l-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold">Rate รวม (KM/L)</p><div id="history-total-rate" class="text-2xl font-extrabold">0.00</div><p id="history-pass-status" class="text-xs font-bold mt-1">ยังไม่มีข้อมูล</p></div>
+          </section>
+          <section id="history-chart-section" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-3">
+            <div class="dash-card p-4 lg:col-span-3 min-w-0"><h3 class="font-bold text-slate-800 text-lg">กราฟเส้น Rate รายลูป</h3><p class="text-xs text-slate-500 mb-2">คำนวณจาก KM ÷ Fuel; เส้นประสีเหลืองคือเกณฑ์มาตรฐาน; นับเฉพาะลูปการวิ่งที่สมบูรณ์ (ครั้งที่/เดือน/ปี)</p><div class="relative w-full h-[260px]"><canvas id="chartHistoryRate"></canvas></div></div>
+            <div class="dash-card p-4 lg:col-span-1 min-w-0"><h3 class="font-bold text-slate-800 text-base">ผ่าน / ไม่ผ่านเกณฑ์</h3><p class="text-xs text-slate-500 mb-2">จำนวน Trip ในผลกรอง</p><div class="relative w-full h-[260px]"><canvas id="chartHistoryPass"></canvas></div></div>
+          </section>
+          <section class="dash-card p-4"><h3 class="font-bold text-slate-800 text-lg mb-3">ประวัติการวิ่ง</h3><div class="overflow-x-auto max-w-full"><table class="w-full text-sm text-left"><thead class="bg-blue-50 text-blue-900 text-xs"><tr><th class="p-2">Tid</th><th class="p-2">Number</th><th class="p-2 text-right">KM</th><th class="p-2 text-right">Fuel</th><th class="p-2 text-right">Rate (KM/L)</th><th class="p-2">ไป</th><th class="p-2">กลับ</th><th class="p-2">รูปแบบ</th></tr></thead><tbody id="history-table-body" class="divide-y divide-slate-100"><tr><td colspan="8" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูล</td></tr></tbody></table></div><div class="mt-3 flex justify-center"><button id="history-show-more" onclick="toggleHistoryRows()" class="hidden px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 text-sm font-bold">ดูเพิ่มเติม</button></div></section>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT & LOGIC -->
+    <script>
+        let rawData = [];
+        let filteredData = [];
+        let chartMonthRateRef = null;
+        let chartDonutPassRef = null;
+        let chartHistogramRef = null;
+        let currentRankTab = 'top';
+        let historyData = [];
+        let chartHistoryRateRef = null;
+        let chartHistoryPassRef = null;
+        let historyFetchError = '';
+        let historyShowAll = false;
+        let chartStatusFilter = null; // null | 'pass' | 'unpass'
+        let histogramBinFilter = null; // {min,max,label}
+
+        // MOCK DATA (Fallback)
+        function generateMockData() {
+            const numbers = ['18-001-BF+', '18-002-BF+', '26-004-SG+', '18-005-BF+'];
+            const drivers = ['วัลลภ กงเพชร', 'ธนธรณ์ ปฐมชัยวงศ์', 'ชุติมันต์ ศรีเสน่ห์', 'สมชาย ใจดี'];
+            const months = ['0769', '0869', '0969', '1069', '1169'];
+            const mock = [];
+            
+            for (let i = 1; i <= 200; i++) {
+                const month = months[Math.floor(Math.random() * months.length)];
+                const num = numbers[Math.floor(Math.random() * numbers.length)];
+                const driver = drivers[Math.floor(Math.random() * drivers.length)];
+                const km = Math.floor(Math.random() * 900) + 600;
+                const fuel = parseFloat((km / (Math.random() * 1.8 + 3.2)).toFixed(2));
+                const rate = parseFloat((km / fuel).toFixed(2));
+                
+                mock.push({
+                    Tid: `T${num}_010${i}`,
+                    NuMBER: num,
+                    KM: km,
+                    Fuel: fuel,
+                    Rate: rate,
+                    'ไป': driver,
+                    month: month
+                });
+            }
+            return mock;
+        }
+
+        // ===== Supabase config: ใส่ Project URL และ anon/publishable key ของคุณตรงนี้ =====
+        // ใช้ได้เฉพาะ anon/publishable key เท่านั้น ห้ามใส่ service_role/secret key ในหน้าเว็บ
+        const SUPABASE_URL = 'https://cdqvupzmkvqkggtmoprm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkcXZ1cHpta3Zxa2dndG1vcHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5NjMwNTksImV4cCI6MjEwNzUzOTA1OX0.GkCink2OVkZA4erynZP9pRiLonVtgL5nLMA457H-mxY';
+        const SUPABASE_TABLE = 'Loop_Fuel_Fleet';
+
+        let supabaseClient = null;
+        function isSupabaseConfigured() {
+            return SUPABASE_URL.startsWith('https://') &&
+                   SUPABASE_URL.includes('.supabase.co') &&
+                   SUPABASE_ANON_KEY &&
+                   !SUPABASE_URL.includes('YOUR_PROJECT_ID') &&
+                   !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_');
+        }
+        function getSupabaseClient() {
+            if (!isSupabaseConfigured()) {
+                throw new Error('กรุณาใส่ SUPABASE_URL และ SUPABASE_ANON_KEY ในส่วนตั้งค่าต้นไฟล์ JavaScript ก่อน');
+            }
+            if (!window.supabase || !window.supabase.createClient) {
+                throw new Error('โหลด Supabase JS ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตหรือ CDN');
+            }
+            if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.sessionStorage, storageKey: 'nca_fleet_fuel_auth_session' }
+            });
+            return supabaseClient;
+        }
+
+        // Supabase Auth: ตรวจ Session ก่อนแสดง Dashboard; ใช้ storageKey ใหม่แยกจาก Session เก่า
+        window.onload = async function() {
+            if (window.lucide) lucide.createIcons();
+            const now = new Date();
+            const timeEl = document.getElementById('last-updated-time');
+            if (timeEl) timeEl.innerText = `${now.toLocaleDateString('th-TH')} เวลา ${now.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})} น.`;
+            const login = document.getElementById('login-container');
+            const dashboard = document.getElementById('dashboard-container');
+            login.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client.auth.getSession();
+                if (error) throw error;
+                if (data.session) {
+                    startInactivityTimer();
+                    login.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    await fetchFromSupabase(SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_TABLE);
+                } else {
+                    console.info('[Supabase Auth] No saved session; waiting for user login.');
+                }
+            } catch (err) {
+                console.error('[Supabase Auth] Session initialization failed:', err);
+                showSupabaseError('ตรวจสอบ Session ไม่สำเร็จ: ' + (err.message || String(err)));
+            }
+        };
+
+        function showSupabaseError(message) {
+            let status = document.getElementById('supabase-connection-error');
+            if (!status) {
+                status = document.createElement('p');
+                status.id = 'supabase-connection-error';
+                status.className = 'text-xs text-rose-600 mt-3 text-left break-words';
+                const form = document.querySelector('#login-container form');
+                if (form) form.appendChild(status);
+            }
+            status.textContent = message;
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const submitButton = event.submitter || document.querySelector('#login-container button[type="submit"]');
+            try {
+                const client = getSupabaseClient();
+                if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'กำลังเข้าสู่ระบบ...'; }
+                const { data, error } = await client.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                if (!data.session) throw new Error('เข้าสู่ระบบสำเร็จแต่ไม่พบ Session กรุณาลองใหม่');
+                console.info('[Supabase Auth] Login succeeded; fetching table:', SUPABASE_TABLE);
+                alert('เข้าสู่ระบบสำเร็จ');
+                startInactivityTimer();
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('dashboard-container').classList.remove('hidden');
+                const errorBox = document.getElementById('supabase-connection-error');
+                if (errorBox) errorBox.remove();
+                await fetchFromSupabase(SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_TABLE);
+            } catch (err) {
+                console.error('[Supabase Auth] Login or table fetch failed:', err);
+                showSupabaseError('เข้าสู่ระบบหรือดึงข้อมูลไม่สำเร็จ: ' + (err.message || String(err)));
+                alert('เข้าสู่ระบบไม่สำเร็จ: ' + (err.message || String(err)));
+            } finally {
+                if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'เข้าสู่ระบบ (Login)'; }
+            }
+        }
+
+        async function handleLogout(reason = 'manual') {
+            try {
+                stopInactivityTimer();
+                const client = getSupabaseClient();
+                const { error } = await client.auth.signOut();
+                if (error) throw error;
+                document.getElementById('dashboard-container').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('login-password').value = '';
+                console.info('[Supabase Auth] Signed out.');
+                alert(reason === 'timeout' ? 'ออกจากระบบอัตโนมัติ เนื่องจากไม่มีการใช้งานเป็นเวลา 15 นาที' : 'ออกจากระบบสำเร็จ');
+            } catch (err) {
+                console.error('[Supabase Auth] Sign out failed:', err);
+                alert('ออกจากระบบไม่สำเร็จ: ' + (err.message || String(err)));
+            }
+        }
+
+        // ดึงข้อมูลจากตารางเดียวกันสำหรับ Overview และ History
+        async function fetchFromSupabase(url, key, table) {
+            const client = getSupabaseClient();
+            async function fetchAll(tableName) {
+                let rows = [], from = 0, step = 1000;
+                while (true) {
+                    const {data, error} = await client.from(tableName).select('*').range(from, from + step - 1);
+                    if (error) throw error;
+                    rows = rows.concat(data || []);
+                    if (!data || data.length < step) break;
+                    from += step;
+                }
+                return rows;
+            }
+            document.getElementById('data-source-badge').innerText = 'กำลังดึงข้อมูล...';
+            historyFetchError = '';
+            try {
+                try { rawData = await fetchAll(table || SUPABASE_TABLE); historyData = rawData; console.info(`[Supabase test] Table ${table || SUPABASE_TABLE}: ${rawData.length} rows returned`, rawData.length ? rawData.slice(0, 2) : rawData); }
+                catch (e) { console.error('[Supabase test] Table read failed:', e); rawData = []; historyData = []; historyFetchError = e.message || String(e); }
+                const badge = document.getElementById('data-source-badge');
+                badge.className = rawData.length ? 'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-1 rounded-md' : 'text-xs bg-amber-100 text-amber-800 border border-amber-300 font-semibold px-2.5 py-1 rounded-md';
+                badge.innerText = rawData.length ? `Live Supabase (${rawData.length} แถว)` : 'ไม่พบข้อมูล Overview';
+            } catch (err) {
+                console.error(err); rawData = []; historyData = []; historyFetchError = err.message || String(err);
+                document.getElementById('data-source-badge').innerText = 'เชื่อมต่อไม่สำเร็จ';
+                alert('ดึงข้อมูล Supabase ไม่สำเร็จ: ' + (err.message || err));
+            }
+            filteredData = [...rawData]; initDashboard(); initHistoryFilters(); renderHistory(); lucide.createIcons();
+        }
+
+        function initDashboard() {
+            populateFilterDropdowns();
+            renderDashboardData();
+        }
+
+        function fieldValue(row, aliases) {
+            const keys = Object.keys(row || {});
+            for (const alias of aliases) {
+                const key = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
+                if (key !== undefined && row[key] != null) return row[key];
+            }
+            return '';
+        }
+        function cleanValue(v) { return String(v ?? '').trim(); }
+        function getNumber(row) {
+            return cleanValue(fieldValue(row, ['NuMBER','Number','number','Vehicle','Vehicle_Number','Vehicle Number','Car_Number','CarNumber','Car No','Bus_Number','Bus Number','VehicleNo','รถ','เบอร์รถ','รหัสรถ']));
+        }
+        function getDriver(row) {
+            return cleanValue(fieldValue(row, ['Driver','Driver_Name','DriverName','Driver Name','Employee','Employee_Name','EmployeeName','Staff','Staff_Name','ชื่อ','ชื่อพนักงาน','ชื่อพนักงานขับรถ','พนักงานขับรถ','คนขับ','พขร','Driver Go','Go_Driver','ไป']));
+        }
+        function historyDateValue(row) {
+            return cleanValue(fieldValue(row, ['Date','date','Trip_Date','TripDate','Work_Date','WorkDate','Created_At','created_at','Timestamp','วันที่','วันที่วิ่ง','วันเดินรถ','เดือน','Month','month','YearMonth','year_month']));
+        }
+        function getMonth(row) {
+            // คอลัมน์ month ของ Loop_Fuel_Fleet เป็นรหัส 3-4 หลัก เช่น 769 / 1069
+            const monthColumn = cleanValue(fieldValue(row, ['month','Month','MONTH']));
+            if (monthColumn) return monthColumn.replace(/\.0$/, '').padStart(4, '0');
+            const raw = historyDateValue(row);
+            if (raw) {
+                const compact = raw.replace(/\.0$/, '').trim();
+                if (/^\d{1,4}$/.test(compact)) return compact.padStart(4, '0');
+                const iso = compact.match(/(\d{4})[-/](\d{1,2})/);
+                if (iso) return `${iso[1]}-${String(iso[2]).padStart(2,'0')}`;
+                const thai = compact.match(/(\d{1,2})[-/](\d{4})/);
+                if (thai) return `${thai[2]}-${String(thai[1]).padStart(2,'0')}`;
+                if (/^\d{4}\d{2}$/.test(compact)) return `${compact.slice(0,4)}-${compact.slice(4,6)}`;
+            }
+            const tid = cleanValue(fieldValue(row, ['Tid','TID','tid','Trip_ID','TripID']));
+            const match = tid.match(/(?:^|[_-])(\d{4})(?:[_-]|$)/);
+            if (match) return match[1];
+            return '';
+        }
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+        function populateFilterDropdowns() {
+            const numberSelect = document.getElementById('filter-number'), driverSelect = document.getElementById('filter-driver'), monthSelect = document.getElementById('filter-month');
+            const numbers = [...new Set(rawData.map(getNumber).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th',{numeric:true}));
+            const drivers = [...new Set(rawData.map(getDriver).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+            const months = [...new Set(rawData.map(getMonth).filter(Boolean))].sort();
+            numberSelect.innerHTML = '<option value="ALL">-- เบอร์รถทั้งหมด --</option>' + numbers.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+            driverSelect.innerHTML = '<option value="ALL">-- พนักงานทั้งหมด --</option>' + drivers.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+            monthSelect.innerHTML = '<option value="ALL">-- ทุกเดือน --</option>' + months.map(m=>`<option value="${escapeHtml(m)}">เดือน ${escapeHtml(m)}</option>`).join('');
+        }
+        function applyFilters() {
+            const selNum = document.getElementById('filter-number').value, selDriver = document.getElementById('filter-driver').value, selMonth = document.getElementById('filter-month').value;
+            filteredData = rawData.filter(item => (selNum === 'ALL' || getNumber(item) === selNum) && (selDriver === 'ALL' || getDriver(item) === selDriver) && (selMonth === 'ALL' || getMonth(item) === selMonth));
+            if (chartStatusFilter) filteredData = filteredData.filter(item => { const rate = itemRate(item); return chartStatusFilter === 'pass' ? rate >= standardForRow(item) : rate < standardForRow(item); });
+            if (histogramBinFilter) filteredData = filteredData.filter(item => { const rate = itemRate(item); return rate >= histogramBinFilter.min && rate < histogramBinFilter.max; });
+            renderDashboardData();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-number').value = 'ALL';
+            document.getElementById('filter-driver').value = 'ALL';
+            document.getElementById('filter-month').value = 'ALL';
+            clearChartClickFilters();
+            applyFilters();
+        }
+
+        function itemRate(item) { const stored = fieldValue(item,['Rate','RATE','rate','KM/L','Km_L','KML']); const n = Number(stored); if (stored !== '' && stored != null && Number.isFinite(n)) return n; const km = Number(fieldValue(item,['KM','Km','km'])) || 0; const fuel = Number(fieldValue(item,['Fuel','FUEL','fuel'])) || 0; return fuel > 0 ? km / fuel : 0; }
+        function standardForRow(item) {
+            const selectedNumber = cleanValue(document.getElementById('filter-number')?.value || 'ALL').toUpperCase();
+            const selectedDriver = cleanValue(document.getElementById('filter-driver')?.value || 'ALL');
+            if (selectedDriver !== 'ALL') return 4.00;
+            if (selectedNumber !== 'ALL') return selectedNumber.endsWith('BF+') ? 3.70 : 4.00;
+            return getNumber(item).toUpperCase().endsWith('BF+') ? 3.70 : 4.00;
+        }
+        function clearChartClickFilters() { chartStatusFilter = null; histogramBinFilter = null; }
+        function renderDashboardData() {
+            calculateKPIs();
+            renderPassSummary();
+            renderBarChartMonthRate();
+            renderDonutPass();
+            renderHistogram();
+            renderTopBottomTable();
+        }
+
+        function renderPassSummary() {
+            const aggregate = (keyFn) => {
+                const groups = new Map();
+                filteredData.forEach(row => {
+                    const key = cleanValue(keyFn(row));
+                    if (!key) return;
+                    const g = groups.get(key) || { km: 0, fuel: 0 };
+                    g.km += Number(fieldValue(row,['KM','Km','km','Distance','ระยะทาง'])) || 0;
+                    g.fuel += Number(fieldValue(row,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0;
+                    groups.set(key, g);
+                });
+                return [...groups.entries()].map(([key,g]) => ({key, rate:g.fuel > 0 ? g.km/g.fuel : 0}));
+            };
+            const vehicles = aggregate(getNumber);
+            const drivers = aggregate(getDriver);
+            const passedVehicles = vehicles.filter(v => v.rate >= (v.key.toUpperCase().endsWith('BF+') ? 3.70 : 4.00)).length;
+            const passedDrivers = drivers.filter(d => d.rate >= 4.00).length;
+            const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
+            set('vehicle-pass-count', passedVehicles);
+            set('vehicle-pass-total', vehicles.length);
+            set('vehicle-pass-percent', `${vehicles.length ? (passedVehicles/vehicles.length*100).toFixed(1) : '0.0'}%`);
+            set('driver-pass-count', passedDrivers);
+            set('driver-pass-total', drivers.length);
+            set('driver-pass-percent', `${drivers.length ? (passedDrivers/drivers.length*100).toFixed(1) : '0.0'}%`);
+        }
+
+        function calculateKPIs() {
+            const totalDistance = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['KM','Km','km','Distance','ระยะทาง'])) || 0), 0);
+            const totalFuel = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0), 0);
+            const totalTrips = filteredData.length;
+            const overallRate = totalFuel > 0 ? (totalDistance / totalFuel) : 0;
+
+            document.getElementById('kpi-distance').innerText = totalDistance.toLocaleString('th-TH');
+            document.getElementById('kpi-fuel').innerText = totalFuel.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+            document.getElementById('kpi-trips').innerText = totalTrips.toLocaleString('th-TH');
+            
+            const rateElem = document.getElementById('card-rate-value');
+            rateElem.innerText = overallRate.toFixed(2);
+
+            const tag = document.getElementById('rate-status-tag');
+            if (overallRate >= 4.00) {
+                tag.className = "bg-emerald-400/20 text-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold";
+                tag.innerText = "เกณฑ์ดี (>= 4.0)";
+            } else {
+                tag.className = "bg-rose-400/20 text-rose-200 px-2 py-0.5 rounded text-[10px] font-bold";
+                tag.innerText = "ต่ำกว่าเกณฑ์ (< 4.0)";
+            }
+        }
+
+        const chartValueLabels = {
+            id: 'chartValueLabels',
+            afterDatasetsDraw(chart) {
+                const {ctx} = chart;
+                ctx.save(); ctx.font = '11px Sarabun, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#334155';
+                if (chart.config.type === 'bar' && chart.canvas.id === 'chartMonthRate') {
+                    const meta = chart.getDatasetMeta(0);
+                    meta.data.forEach((bar, i) => {
+                        const value = chart.data.datasets[0].data[i];
+                        if (value == null || !Number.isFinite(Number(value))) return;
+                        let label = Number(value).toFixed(chart.canvas.id === 'chartMonthRate' ? 2 : 0);
+                        if (chart.canvas.id === 'chartMonthRate') {
+                            const changes = chart.$monthChanges || [];
+                            if (i > 0 && changes[i] != null) label += ` (${changes[i] > 0 ? '+' : ''}${changes[i].toFixed(1)}%)`;
+                        }
+                        ctx.fillText(label, bar.x, Math.max(bar.y - 7, 12));
+                    });
+                } else if (chart.config.type === 'doughnut') {
+                    const meta = chart.getDatasetMeta(0);
+                    meta.data.forEach((arc, i) => {
+                        const value = Number(chart.data.datasets[0].data[i] || 0); if (!value) return;
+                        const pos = arc.tooltipPosition(); ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Sarabun, sans-serif';
+                        ctx.fillText(String(value), pos.x, pos.y);
+                    });
+                }
+                ctx.restore();
+            }
+        };
+
+        function renderBarChartMonthRate() {
+            const ctx = document.getElementById('chartMonthRate').getContext('2d');
+            const monthMap = {};
+            filteredData.forEach(item => {
+                const m = getMonth(item) || '0000';
+                if (!monthMap[m]) monthMap[m] = { km: 0, fuel: 0 };
+                monthMap[m].km += Number(fieldValue(item,['KM','Km','km'])) || 0;
+                monthMap[m].fuel += Number(fieldValue(item,['Fuel','FUEL','fuel'])) || 0;
+            });
+            const sortedMonths = Object.keys(monthMap).sort();
+            const rates = sortedMonths.map(m => monthMap[m].fuel > 0 ? Number((monthMap[m].km / monthMap[m].fuel).toFixed(2)) : 0);
+            const changes = rates.map((rate, i) => i === 0 || rates[i-1] === 0 ? null : ((rate-rates[i-1])/rates[i-1])*100);
+            if (chartMonthRateRef) chartMonthRateRef.destroy();
+            chartMonthRateRef = new Chart(ctx, {
+                type: 'bar', data: { labels: sortedMonths.map(m => `เดือน ${m}`), datasets: [{ label: 'Rate (KM/L)', data: rates, backgroundColor: '#2563EB', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, layout:{padding:{top:28}}, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: (c) => { const i=c.dataIndex, ch=changes[i]; return i===0 || ch==null ? 'เทียบเดือนก่อนหน้า: —' : `เทียบเดือนก่อนหน้า: ${ch>0?'+':''}${ch.toFixed(1)}%`; } } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+                    onClick: (event, elements) => { if (!elements.length) return; const m=sortedMonths[elements[0].index]; document.getElementById('filter-month').value=m; clearChartClickFilters(); applyFilters(); }
+                }, plugins: [{...chartValueLabels, afterDatasetsDraw(chart) { chart.$monthChanges = changes; chartValueLabels.afterDatasetsDraw(chart); }}]
+            });
+            chartMonthRateRef.$monthChanges = changes;
+        }
+
+        function renderDonutPass() {
+            const ctx = document.getElementById('chartDonutPass').getContext('2d');
+            let passCount = 0, unpassCount = 0;
+            filteredData.forEach(item => { if (itemRate(item) >= standardForRow(item)) passCount++; else unpassCount++; });
+            if (chartDonutPassRef) chartDonutPassRef.destroy();
+            chartDonutPassRef = new Chart(ctx, { type: 'doughnut', data: { labels: ['Pass (ผ่านเกณฑ์)', 'Unpass (ไม่ผ่านเกณฑ์)'], datasets: [{ data: [passCount, unpassCount], backgroundColor: ['#10B981', '#EF4444'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { family: 'Sarabun' } } }, tooltip: { callbacks: { label: c => { const total = c.dataset.data.reduce((a, v) => a + Number(v || 0), 0); const pct = total ? (Number(c.raw) / total * 100).toFixed(1) : '0.0'; return `${c.label}: ${c.raw} Trip (${pct}%)`; } } } }, cutout: '62%', onClick: (event, elements) => { if (!elements.length) return; const idx=elements[0].index; chartStatusFilter = (chartStatusFilter === (idx===0?'pass':'unpass')) ? null : (idx===0?'pass':'unpass'); histogramBinFilter=null; applyFilters(); } }
+            }, [chartValueLabels]);
+        }
+
+        function renderHistogram() {
+            const ctx = document.getElementById('chartHistogram').getContext('2d');
+            const values = filteredData.map(itemRate).filter(v => Number.isFinite(v) && v >= 0);
+            const step = 0.2; let min = values.length ? Math.floor(Math.min(...values)/step)*step : 0; let max = values.length ? Math.ceil(Math.max(...values)/step)*step + step : 1;
+            if (max-min > 30) { min = 0; max = 10; }
+            const labels=[], counts=[], bounds=[];
+            for (let lo=min; lo<max-1e-9; lo+=step) { const hi=lo+step; labels.push(`${lo.toFixed(1)}–${hi.toFixed(1)}`); bounds.push({min:lo,max:hi,label:labels[labels.length-1]}); counts.push(values.filter(v=>v>=lo && v<hi).length); }
+            if (chartHistogramRef) chartHistogramRef.destroy();
+            chartHistogramRef = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'จำนวนเที่ยว', data: counts, backgroundColor: bounds.map(b=>histogramBinFilter&&histogramBinFilter.label===b.label?'#F59E0B':'#34D399'), borderRadius: 3, barPercentage: 1, categoryPercentage: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, layout:{padding:{top:18}}, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c=>`${c.raw} Trip` } } }, scales: { x: { grid: { display: false }, ticks: { maxRotation: 60, minRotation: 45, autoSkip: true } }, y: { beginAtZero:true, ticks: { precision: 0 } } },
+                    onClick: (event, elements) => { if (!elements.length) return; const bin=bounds[elements[0].index]; histogramBinFilter = histogramBinFilter?.label===bin.label ? null : bin; chartStatusFilter=null; applyFilters(); }
+                }, plugins: [chartValueLabels]
+            });
+        }
+
+        function switchRankTab(tab) {
+            currentRankTab = tab;
+            document.getElementById('btn-top10').className = tab === 'top' 
+                ? "px-2.5 py-1 rounded-md bg-white shadow-sm font-bold text-blue-600 transition"
+                : "px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 transition";
+            
+            document.getElementById('btn-bot10').className = tab === 'bottom' 
+                ? "px-2.5 py-1 rounded-md bg-white shadow-sm font-bold text-rose-600 transition"
+                : "px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 transition";
+
+            renderTopBottomTable();
+        }
+
+        function renderTopBottomTable() {
+            const tbody = document.getElementById('rank-table-body');
+            
+            const processed = filteredData.map(item => {
+                const km = parseFloat(item.KM || item.km) || 0;
+                const fuel = parseFloat(item.Fuel || item.fuel) || 0;
+                return {
+                    num: getNumber(item) || cleanValue(fieldValue(item, ['Tid','TID'])) || '-',
+                    driver: getDriver(item) || 'ไม่ระบุ',
+                    rate: fuel > 0 ? km / fuel : 0
+                };
+            });
+
+            processed.sort((a, b) => currentRankTab === 'top' ? b.rate - a.rate : a.rate - b.rate);
+            const sliced = processed.slice(0, 10);
+
+            if (sliced.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-slate-400">ไม่พบข้อมูล</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sliced.map((item, idx) => {
+                const isGood = item.rate >= 4.00;
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-1.5 px-1 font-bold text-slate-400">${idx + 1}</td>
+                        <td class="py-1.5 px-1 text-slate-700 font-semibold">${item.num} <span class="text-[10px] text-slate-400 font-normal">(${item.driver})</span></td>
+                        <td class="py-1.5 px-1 text-right font-bold ${isGood ? 'text-emerald-600' : 'text-rose-600'}">
+                            ${item.rate.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function switchPage(page) {
+            const isOverview = page === 'overview';
+            document.getElementById('page-overview').classList.toggle('hidden', !isOverview);
+            document.getElementById('page-history').classList.toggle('hidden', isOverview);
+            const sideTabs = document.querySelectorAll('.sidebar-tab');
+            if (sideTabs.length >= 2) {
+                sideTabs[0].style.background = isOverview ? '#1D4ED8' : '#60A5FA';
+                sideTabs[0].style.opacity = isOverview ? '1' : '.8';
+                sideTabs[1].style.background = isOverview ? '#60A5FA' : '#1D4ED8';
+                sideTabs[1].style.opacity = isOverview ? '.8' : '1';
+            }
+            if (!isOverview) renderHistory();
+            setTimeout(()=>{ if(chartHistoryRateRef) chartHistoryRateRef.resize(); },50);
+        }
+        function historyTid(r) { return cleanValue(fieldValue(r,['Tid','TID','tid','Trip_ID','TripID'])); }
+        function historyKM(r) { return Number(fieldValue(r,['KM','Km','km','Distance','ระยะทาง'])) || 0; }
+        function historyFuel(r) { return Number(fieldValue(r,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0; }
+        function historyRate(r) { const stored = fieldValue(r,['Rate','RATE','rate','KM/L','Km_L','KML']); const n = Number(stored); if (stored !== '' && stored != null && Number.isFinite(n)) return n; const fuel=historyFuel(r); return fuel>0 ? historyKM(r)/fuel : 0; }
+        function historyStandard(r) { return getNumber(r).toUpperCase().endsWith('BF+') ? 3.70 : 4.00; }
+        function historyOut(r) { return cleanValue(fieldValue(r,['ไป','Go','Outbound','Going','Route_Out'])); }
+        function historyBack(r) { return cleanValue(fieldValue(r,['กลับ','Back','Return','Inbound','Route_Back'])); }
+        function historyType(r) { return cleanValue(fieldValue(r,['รูปแบบ','รูปแบบการวิ่ง','Type','Trip_Type','TripType','Run_Type'])); }
+        function initHistoryFilters() {
+            const numberSource = historyData.some(r => getNumber(r)) ? historyData : rawData;
+            const driverSource = historyData.some(r => getDriver(r)) ? historyData : rawData;
+            const numbers=[...new Set(numberSource.map(getNumber).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th',{numeric:true}));
+            const drivers=[...new Set(driverSource.map(getDriver).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+            const months=[...new Set(historyData.map(getMonth).filter(Boolean))].sort();
+            document.getElementById('history-number').innerHTML='<option value="ALL">-- เบอร์รถทั้งหมด --</option>'+numbers.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+            document.getElementById('history-driver').innerHTML='<option value="ALL">-- พนักงานทั้งหมด --</option>'+drivers.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+            document.getElementById('history-month').innerHTML='<option value="ALL">-- ทุกเดือน --</option>'+months.map(m=>`<option value="${escapeHtml(m)}">เดือน ${escapeHtml(m)}</option>`).join('');
+        }
+        function resetHistoryFilters() {
+            document.getElementById('history-search').value='';
+            document.getElementById('history-number').value='ALL';
+            document.getElementById('history-driver').value='ALL';
+            document.getElementById('history-month').value='ALL';
+            renderHistory();
+        }
+        function renderHistory() {
+            const search=cleanValue(document.getElementById('history-search')?.value).toLocaleLowerCase('th');
+            const sn=document.getElementById('history-number')?.value||'ALL', sd=document.getElementById('history-driver')?.value||'ALL';
+            const sm=document.getElementById('history-month')?.value||'ALL';
+            const rows=historyData.filter(r=>{
+                const num=getNumber(r), driver=getDriver(r), month=getMonth(r);
+                return (!search||`${num} ${driver} ${historyTid(r)}`.toLocaleLowerCase('th').includes(search)) &&
+                    (sn==='ALL'||num===sn) && (sd==='ALL'||driver===sd) && (sm==='ALL'||month===sm);
+            });
+            const km=rows.reduce((a,r)=>a+historyKM(r),0), fuel=rows.reduce((a,r)=>a+historyFuel(r),0), rate=fuel?km/fuel:0;
+            document.getElementById('history-total-km').textContent=km.toLocaleString('th-TH',{maximumFractionDigits:2});
+            document.getElementById('history-total-fuel').textContent=fuel.toLocaleString('th-TH',{maximumFractionDigits:2});
+            document.getElementById('history-total-trips').textContent=rows.length.toLocaleString('th-TH');
+            document.getElementById('history-total-rate').textContent=rate.toFixed(2);
+            const threshold = (sn !== 'ALL' && sd === 'ALL' && sn.toUpperCase().endsWith('BF+') ? 3.70 : 4.00);
+            const status=document.getElementById('history-pass-status');
+            status.textContent=rows.length?(rate>=threshold?`ผ่านเกณฑ์ (≥ ${threshold.toFixed(2)} KM/L)`:`ไม่ผ่านเกณฑ์ (< ${threshold.toFixed(2)} KM/L)`):'ยังไม่มีข้อมูล';
+            status.className='text-xs font-bold mt-1 '+(rows.length?(rate>=threshold?'text-emerald-600':'text-rose-600'):'text-slate-400');
+            const full=rows.filter(r=>/full/i.test(historyType(r))).length, mixed=rows.filter(r=>/mixed/i.test(historyType(r))).length;
+            document.getElementById('history-type-summary').textContent=`Full: ${full} | Mixed: ${mixed}`;
+            const note = document.getElementById('history-data-note');
+            if (historyFetchError) note.textContent = `อ่านตาราง Loop_Fuel_Fleet ไม่สำเร็จ: ${historyFetchError} — ตรวจสอบชื่อตารางและสิทธิ์ SELECT ใน Supabase`;
+            else if (!historyData.length) note.textContent = 'ตาราง Loop_Fuel_Fleet อ่านได้แต่ไม่มีแถวข้อมูล หรือไม่มีข้อมูลตามเงื่อนไข';
+            else if (!historyData.some(r=>getNumber(r)) || !historyData.some(r=>getDriver(r))) note.textContent = `โหลดได้ ${historyData.length} แถว แต่ไม่พบคอลัมน์เบอร์รถหรือพนักงานที่รู้จักในตารางประวัติ กรุณาตรวจสอบชื่อคอลัมน์จริง`;
+            else note.textContent = `พบข้อมูล ${rows.length.toLocaleString('th-TH')} จากทั้งหมด ${historyData.length.toLocaleString('th-TH')} ลูป`;
+            const tbody=document.getElementById('history-table-body');
+            const sortedRows = [...rows].sort((a,b)=>historySortValue(b).localeCompare(historySortValue(a),'th',{numeric:true}));
+            const displayRows = historyShowAll ? sortedRows : sortedRows.slice(0,10);
+            const moreButton = document.getElementById('history-show-more');
+            if (moreButton) { moreButton.classList.toggle('hidden', rows.length <= 10); moreButton.textContent = historyShowAll ? 'ย่อเหลือ 10 Trip ล่าสุด' : `ดูเพิ่มเติม (${Math.max(0, rows.length-10)} Trip)`; }
+            tbody.innerHTML=displayRows.length?displayRows.map(r=>{
+                const type=historyType(r), good=historyFuel(r)>0&&historyKM(r)/historyFuel(r)>=standardForRow(r);
+                return `<tr class="hover:bg-blue-50/70"><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(historyTid(r)||'-')}</td><td class="p-2 whitespace-nowrap font-semibold">${escapeHtml(getNumber(r)||'-')}</td><td class="p-2 text-right">${historyKM(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right">${historyFuel(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right font-semibold ${historyRate(r)>=historyStandard(r)?'text-emerald-600':'text-rose-600'}">${historyRate(r).toFixed(2)}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyOut(r)||getDriver(r)||'-')}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyBack(r)||'-')}</td><td class="p-2 whitespace-nowrap"><span class="px-2 py-1 rounded-full text-xs font-bold ${/full/i.test(type)?'bg-emerald-100 text-emerald-700':/mixed/i.test(type)?'bg-amber-100 text-amber-800':(good?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700')}">${escapeHtml(type||'-')}</span></td></tr>`;
+            }).join(''):'<tr><td colspan="8" class="p-4 text-center text-slate-400">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
+            note.textContent += ` | แสดงประวัติล่าสุด ${displayRows.length} Trip จาก ${rows.length} Trip ที่ตรงตัวกรอง`;
+            const isFiltered = Boolean(search || sn !== 'ALL' || sd !== 'ALL' || sm !== 'ALL');
+            renderHistoryChart(rows, isFiltered);
+        }
+        function toggleHistoryRows() { historyShowAll = !historyShowAll; renderHistory(); }
+        function historySortValue(r) {
+            const date = cleanValue(fieldValue(r,['Created_At','created_at','Date','date','Trip_Date','TripDate','Timestamp']));
+            return date || historyTid(r) || '';
+        }
+        function renderHistoryChart(rows, isFiltered) {
+            const canvas=document.getElementById('chartHistoryRate');
+            const donutCanvas=document.getElementById('chartHistoryPass');
+            const section=document.getElementById('history-chart-section');
+            if (!canvas || !donutCanvas || !section) return;
+            if (!isFiltered) {
+                if(chartHistoryRateRef){chartHistoryRateRef.destroy();chartHistoryRateRef=null;}
+                if(chartHistoryPassRef){chartHistoryPassRef.destroy();chartHistoryPassRef=null;}
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            const pts=rows.filter(r=>historyFuel(r)>0).map((r,i)=>({label:historyTid(r)||`Loop ${i+1}`,rate:Number(historyRate(r).toFixed(2)),threshold:historyStandard(r)}));
+            if(chartHistoryRateRef)chartHistoryRateRef.destroy();
+            chartHistoryRateRef=new Chart(canvas.getContext('2d'),{type:'line',data:{labels:pts.map(p=>p.label),datasets:[
+                {label:'Rate (KM/L)',data:pts.map(p=>p.rate),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.12)',pointBackgroundColor:pts.map(p=>p.rate>=p.threshold?'#10B981':'#EF4444'),pointRadius:3,borderWidth:2,tension:.2,fill:true},
+                {label:'เกณฑ์มาตรฐาน',data:pts.map(p=>p.threshold),borderColor:'#F59E0B',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false}
+            ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},plugins:{legend:{display:true,position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${Number(c.raw).toFixed(2)}${c.datasetIndex===0?' KM/L':''}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12,maxRotation:45}},y:{beginAtZero:true}}}});
+
+            let pass=0, unpass=0;
+            rows.forEach(r=>{ if(historyRate(r)>=historyStandard(r)) pass++; else unpass++; });
+            if(chartHistoryPassRef)chartHistoryPassRef.destroy();
+            chartHistoryPassRef=new Chart(donutCanvas.getContext('2d'),{type:'doughnut',data:{labels:['ผ่านเกณฑ์','ไม่ผ่านเกณฑ์'],datasets:[{data:[pass,unpass],backgroundColor:['#10B981','#EF4444'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{family:'Sarabun',size:10}}},tooltip:{callbacks:{label:c=>{const total=c.dataset.data.reduce((a,v)=>a+Number(v||0),0);const pct=total?(Number(c.raw)/total*100).toFixed(1):'0.0';return `${c.label}: ${c.raw} Trip (${pct}%)`;}}}}}});
+        }
+
+        // ออกจากระบบเมื่อไม่มีการใช้งาน 15 นาที; session เก็บใน sessionStorage เพื่อสิ้นสุดเมื่อปิดแท็บ/เบราว์เซอร์
+        const INACTIVITY_LIMIT_MS = 15 * 60 * 1000;
+        let inactivityTimer = null;
+        function stopInactivityTimer() {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+        }
+        function resetInactivityTimer() {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            const dashboard = document.getElementById('dashboard-container');
+            if (dashboard && !dashboard.classList.contains('hidden')) {
+                inactivityTimer = setTimeout(() => handleLogout('timeout'), INACTIVITY_LIMIT_MS);
+            }
+        }
+        function startInactivityTimer() {
+            stopInactivityTimer();
+            ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt => {
+                document.removeEventListener(evt, resetInactivityTimer);
+                document.addEventListener(evt, resetInactivityTimer, {passive:true});
+            });
+            resetInactivityTimer();
+        }
+
+
+        // MODAL CONFIG
+        function openConfigModal() {
+            document.getElementById('supabase-url').value = SUPABASE_URL;
+            document.getElementById('supabase-key').value = SUPABASE_ANON_KEY;
+            document.getElementById('supabase-table').value = 'Loop_Fuel_Fleet';
+            document.getElementById('configModal').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+        }
+
+        function saveSupabaseConfig() {
+            alert('เวอร์ชันนี้กำหนด Supabase URL และ Key จากตัวแปร SUPABASE_URL / SUPABASE_ANON_KEY ในโค้ดโดยตรง กรุณาแก้ค่าทั้งสองตัวแปรแล้วเปิดหน้าเว็บใหม่');
+        }
+    </script>
+</body>
+</html>
