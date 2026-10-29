@@ -65,7 +65,7 @@
             background: #94A3B8;
         }
         .login-backdrop {
-            background-image: linear-gradient(115deg, rgba(2, 6, 23, .62), rgba(15, 23, 42, .42)), url('https://wallpaperaccess.com/full/846241.jpg');
+            background-image: linear-gradient(115deg, rgba(2, 6, 23, .82), rgba(15, 23, 42, .62)), url('https://wallpaperaccess.com/full/846241.jpg');
             background-size: cover;
             background-position: center;
         }
@@ -200,6 +200,7 @@
                         <div class="flex items-baseline gap-2">
                             <span id="card-rate-value" class="text-4xl font-extrabold tracking-tight">0.00</span>
                             <span class="text-sm text-blue-200 font-medium">กม./ลิตร</span>
+                            <span id="card-rate-gps" class="text-[11px] text-blue-100/90 font-medium">(~ 0.00 หากอิง GPS)</span>
                         </div>
                     </div>
                     <div class="flex items-center justify-between text-xs text-blue-100 border-t border-blue-400/40 pt-2">
@@ -216,10 +217,14 @@
                 <div class="lg:col-span-7 dash-card p-4 flex flex-col justify-between">
                     <div class="flex items-center justify-between mb-2">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Bar Chart month (Rate รายเดือน)</h3>
-                            <p class="text-xs text-slate-400">อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน</p>
+                            <h3 id="month-chart-title" class="font-bold text-slate-800 text-lg">Bar Chart month (Rate รายเดือน)</h3>
+                            <p id="month-chart-description" class="text-xs text-slate-400">อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน</p>
                         </div>
-                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium">Monthly Rate</span>
+                        <div class="inline-flex shrink-0 rounded-lg bg-slate-100 p-1 gap-1" role="group" aria-label="เลือกข้อมูลกราฟรายเดือน">
+                            <button type="button" data-month-metric="rate" onclick="setMonthChartMetric('rate')" aria-pressed="true" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition bg-blue-600 text-white shadow-sm">Rate</button>
+                            <button type="button" data-month-metric="distance" onclick="setMonthChartMetric('distance')" aria-pressed="false" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white">Distance</button>
+                            <button type="button" data-month-metric="fuel" onclick="setMonthChartMetric('fuel')" aria-pressed="false" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white">Fuel</button>
+                        </div>
                     </div>
                     <div class="relative w-full h-[240px]">
                         <canvas id="chartMonthRate"></canvas>
@@ -358,6 +363,20 @@
         let rawData = [];
         let filteredData = [];
         let chartMonthRateRef = null;
+        let monthChartMetric = 'rate';
+
+        function setMonthChartMetric(metric) {
+            if (!['rate', 'distance', 'fuel'].includes(metric)) return;
+            monthChartMetric = metric;
+            document.querySelectorAll('[data-month-metric]').forEach(button => {
+                const active = button.dataset.monthMetric === metric;
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                button.className = active
+                    ? 'month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition bg-blue-600 text-white shadow-sm'
+                    : 'month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white';
+            });
+            renderBarChartMonthRate();
+        }
         let chartDonutPassRef = null;
         let chartHistogramRef = null;
         let currentRankTab = 'top';
@@ -658,6 +677,7 @@
             const totalFuel = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0), 0);
             const totalTrips = filteredData.length;
             const overallRate = totalFuel > 0 ? (totalDistance / totalFuel) : 0;
+            const gpsAdjustedRate = totalFuel > 0 ? (totalDistance * 1.0324 / totalFuel) : 0;
 
             document.getElementById('kpi-distance').innerText = totalDistance.toLocaleString('th-TH');
             document.getElementById('kpi-fuel').innerText = totalFuel.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1});
@@ -665,6 +685,8 @@
             
             const rateElem = document.getElementById('card-rate-value');
             rateElem.innerText = overallRate.toFixed(2);
+            const gpsRateElem = document.getElementById('card-rate-gps');
+            if (gpsRateElem) gpsRateElem.innerText = `(~ ${gpsAdjustedRate.toFixed(2)} หากอิง GPS ที่ 3.24%)`;
 
             const tag = document.getElementById('rate-status-tag');
             if (overallRate >= 4.00) {
@@ -684,13 +706,12 @@
                 if (chart.config.type === 'bar' && chart.canvas.id === 'chartMonthRate') {
                     const meta = chart.getDatasetMeta(0);
                     meta.data.forEach((bar, i) => {
-                        const value = chart.data.datasets[0].data[i];
-                        if (value == null || !Number.isFinite(Number(value))) return;
-                        let label = Number(value).toFixed(chart.canvas.id === 'chartMonthRate' ? 2 : 0);
-                        if (chart.canvas.id === 'chartMonthRate') {
-                            const changes = chart.$monthChanges || [];
-                            if (i > 0 && changes[i] != null) label += ` (${changes[i] > 0 ? '+' : ''}${changes[i].toFixed(1)}%)`;
-                        }
+                        const value = Number(chart.data.datasets[0].data[i]);
+                        if (!Number.isFinite(value)) return;
+                        const metric = chart.$monthMetric || 'rate';
+                        let label = metric === 'rate' ? value.toFixed(2) : value.toLocaleString('th-TH', {maximumFractionDigits: 0});
+                        const changes = chart.$monthChanges || [];
+                        if (i > 0 && changes[i] != null) label += ` (${changes[i] > 0 ? '+' : ''}${changes[i].toFixed(1)}%)`;
                         ctx.fillText(label, bar.x, Math.max(bar.y - 7, 12));
                     });
                 } else if (chart.config.type === 'doughnut') {
@@ -706,25 +727,55 @@
         };
 
         function renderBarChartMonthRate() {
-            const ctx = document.getElementById('chartMonthRate').getContext('2d');
+            const canvas = document.getElementById('chartMonthRate');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const metric = monthChartMetric || 'rate';
+            const metricConfig = {
+                rate: { title: 'Bar Chart month (Rate รายเดือน)', description: 'อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน', label: 'Rate (KM/L)', color: '#2563EB' },
+                distance: { title: 'Bar Chart month (Distance รายเดือน)', description: 'ระยะทางรวม (KM) แยกตามแต่ละเดือน', label: 'Distance (KM)', color: '#0D9488' },
+                fuel: { title: 'Bar Chart month (Fuel รายเดือน)', description: 'ปริมาณน้ำมันรวม (ลิตร) แยกตามแต่ละเดือน', label: 'Fuel (Liters)', color: '#D97706' }
+            }[metric] || { title: 'Bar Chart month (Rate รายเดือน)', description: 'อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน', label: 'Rate (KM/L)', color: '#2563EB' };
+            const titleEl = document.getElementById('month-chart-title');
+            const descriptionEl = document.getElementById('month-chart-description');
+            if (titleEl) titleEl.textContent = metricConfig.title;
+            if (descriptionEl) descriptionEl.textContent = metricConfig.description;
+
             const monthMap = {};
             filteredData.forEach(item => {
                 const m = getMonth(item) || '0000';
                 if (!monthMap[m]) monthMap[m] = { km: 0, fuel: 0 };
-                monthMap[m].km += Number(fieldValue(item,['KM','Km','km'])) || 0;
-                monthMap[m].fuel += Number(fieldValue(item,['Fuel','FUEL','fuel'])) || 0;
+                monthMap[m].km += Number(fieldValue(item,['KM','Km','km','Distance','ระยะทาง'])) || 0;
+                monthMap[m].fuel += Number(fieldValue(item,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0;
             });
             const sortedMonths = Object.keys(monthMap).sort();
-            const rates = sortedMonths.map(m => monthMap[m].fuel > 0 ? Number((monthMap[m].km / monthMap[m].fuel).toFixed(2)) : 0);
-            const changes = rates.map((rate, i) => i === 0 || rates[i-1] === 0 ? null : ((rate-rates[i-1])/rates[i-1])*100);
+            const values = sortedMonths.map(m => {
+                const g = monthMap[m];
+                if (metric === 'distance') return g.km;
+                if (metric === 'fuel') return g.fuel;
+                return g.fuel > 0 ? g.km / g.fuel : 0;
+            });
+            const changes = values.map((value, i) => i === 0 || values[i-1] === 0 ? null : ((value-values[i-1])/Math.abs(values[i-1]))*100);
             if (chartMonthRateRef) chartMonthRateRef.destroy();
             chartMonthRateRef = new Chart(ctx, {
-                type: 'bar', data: { labels: sortedMonths.map(m => `เดือน ${m}`), datasets: [{ label: 'Rate (KM/L)', data: rates, backgroundColor: '#2563EB', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, layout:{padding:{top:28}}, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: (c) => { const i=c.dataIndex, ch=changes[i]; return i===0 || ch==null ? 'เทียบเดือนก่อนหน้า: —' : `เทียบเดือนก่อนหน้า: ${ch>0?'+':''}${ch.toFixed(1)}%`; } } } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+                type: 'bar',
+                data: { labels: sortedMonths.map(m => `เดือน ${m}`), datasets: [{ label: metricConfig.label, data: values, backgroundColor: metricConfig.color, borderRadius: 6 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, layout: { padding: { top: 30 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: {
+                            label: c => metric === 'rate' ? `${metricConfig.label}: ${Number(c.raw).toFixed(2)}` : `${metricConfig.label}: ${Number(c.raw).toLocaleString('th-TH', {maximumFractionDigits: 2})}`,
+                            afterLabel: c => { const i=c.dataIndex, ch=changes[i]; return i===0 || ch==null ? 'เทียบเดือนก่อนหน้า: —' : `เทียบเดือนก่อนหน้า: ${ch>0?'+':''}${ch.toFixed(1)}%`; }
+                        } }
+                    },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
                     onClick: (event, elements) => { if (!elements.length) return; const m=sortedMonths[elements[0].index]; document.getElementById('filter-month').value=m; clearChartClickFilters(); applyFilters(); }
-                }, plugins: [{...chartValueLabels, afterDatasetsDraw(chart) { chart.$monthChanges = changes; chartValueLabels.afterDatasetsDraw(chart); }}]
+                },
+                plugins: [{...chartValueLabels, afterDatasetsDraw(chart) { chart.$monthChanges = changes; chart.$monthMetric = metric; chartValueLabels.afterDatasetsDraw(chart); }}]
             });
             chartMonthRateRef.$monthChanges = changes;
+            chartMonthRateRef.$monthMetric = metric;
         }
 
         function renderDonutPass() {
