@@ -549,7 +549,7 @@
                 catch (e) { console.error('[Supabase test] Table read failed:', e); rawData = []; historyData = []; historyFetchError = e.message || String(e); }
                 const badge = document.getElementById('data-source-badge');
                 badge.className = rawData.length ? 'text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-1 rounded-md' : 'text-xs bg-amber-100 text-amber-800 border border-amber-300 font-semibold px-2.5 py-1 rounded-md';
-                badge.innerText = rawData.length ? `Live Supabase (${rawData.length} แถว)` : 'ไม่พบข้อมูล Overview';
+                badge.innerText = rawData.length ? `Live Database (${rawData.length} แถว)` : 'ไม่พบข้อมูล Overview';
             } catch (err) {
                 console.error(err); rawData = []; historyData = []; historyFetchError = err.message || String(err);
                 document.getElementById('data-source-badge').innerText = 'เชื่อมต่อไม่สำเร็จ';
