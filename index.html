@@ -30,12 +30,17 @@
                     },
                     fontFamily: {
                         sans: ['Sarabun', 'Inter', 'sans-serif'],
+			display: ['Shrikhand', 'cursive'],
                     }
                 }
             }
         }
     </script>
     <style>
+	@font-face{
+		font-family: 'Shrikhand';
+		src: url('Shrikhand-Regular.ttf');
+	}
         body {
             font-family: 'Sarabun', sans-serif;
             background-color: #E2E8F0;
@@ -84,6 +89,7 @@
             transform: scaleX(1.15);
         }
     </style>
+	<link rel="icon" type="image/png" href="Icon.png">
 </head>
 <body class="p-3 md:p-6 min-h-screen text-slate-800 flex items-center justify-center">
     <!-- 🔐 หน้า Login (แสดงขึ้นมาบังหน้าจอก่อน ถ้ายังไม่ล็อกอิน) -->
@@ -126,7 +132,7 @@
         <!-- TOP HEADER AREA -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 px-2 gap-3">
             <div class="flex items-baseline gap-4">
-                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 font-serif">NCA_Fleet_Fuel</h1>
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 font-display">NCA_Fleet_Fuel</h1>
                 <span class="text-xs md:text-sm font-medium text-slate-500 bg-slate-300/60 px-3 py-1 rounded-full flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     อัปเดตข้อมูลวันที่ <span id="last-updated-time" class="font-semibold text-slate-700">กำลังโหลด...</span>
