@@ -689,7 +689,7 @@
             const totalFuel = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0), 0);
             const totalTrips = filteredData.length;
             const overallRate = totalFuel > 0 ? (totalDistance / totalFuel) : 0;
-            const gpsAdjustedRate = totalFuel > 0 ? (totalDistance * 1.0324 / totalFuel) : 0;
+            const gpsAdjustedRate = totalFuel > 0 ? (totalDistance * 1.0356 / totalFuel) : 0;
 
             document.getElementById('kpi-distance').innerText = totalDistance.toLocaleString('th-TH');
             document.getElementById('kpi-fuel').innerText = totalFuel.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1});
@@ -698,7 +698,7 @@
             const rateElem = document.getElementById('card-rate-value');
             rateElem.innerText = overallRate.toFixed(2);
             const gpsRateElem = document.getElementById('card-rate-gps');
-            if (gpsRateElem) gpsRateElem.innerText = `(~ ${gpsAdjustedRate.toFixed(2)} หากอิง GPS ที่ 3.24%)`;
+            if (gpsRateElem) gpsRateElem.innerText = `(~ ${gpsAdjustedRate.toFixed(2)} หากอิง GPS ที่ 3.56%)`;
 
             const tag = document.getElementById('rate-status-tag');
             if (overallRate >= 4.00) {
