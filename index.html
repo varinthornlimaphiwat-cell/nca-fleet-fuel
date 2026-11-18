@@ -70,7 +70,7 @@
             background: #94A3B8;
         }
         .login-backdrop {
-            background-image: linear-gradient(115deg, rgba(2, 6, 23, .82), rgba(15, 23, 42, .62)), url('https://wallpaperaccess.com/full/846241.jpg');
+            background-image: linear-gradient(115deg, rgba(2, 6, 23, .82), rgba(15, 23, 42, .62)), url('https://wallpapercave.com/wp/wp10207898.jpg');
             background-size: cover;
             background-position: center;
         }
@@ -199,7 +199,7 @@
                     </div>
                 </div>
 
-                <!-- RATE SUMMARY CARD (3 Cols)[cite: 3] -->
+                <!-- RATE SUMMARY CARD (3 Cols) -->
                 <div class="lg:col-span-3 dash-card p-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex flex-col justify-between relative overflow-hidden">
                     <div class="absolute -right-4 -bottom-4 opacity-15">
                         <i data-lucide="gauge" class="w-32 h-32"></i>
@@ -225,7 +225,7 @@
             <!-- MIDDLE SECTION: BAR CHART & METRICS -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 
-                <!-- LEFT: BAR CHART MONTH (Rate แยกรายเดือน) (7 Cols)[cite: 3] -->
+                <!-- LEFT: BAR CHART MONTH (Rate แยกรายเดือน) (7 Cols) -->
                 <div class="lg:col-span-7 dash-card p-4 flex flex-col justify-between">
                     <div class="flex items-center justify-between mb-2">
                         <div>
@@ -243,7 +243,7 @@
                     </div>
                 </div>
 
-                <!-- RIGHT: DISTANCE, FUEL, NUMBER OF TRIPS (5 Cols)[cite: 3] -->
+                <!-- RIGHT: DISTANCE, FUEL, NUMBER OF TRIPS (5 Cols) -->
                 <div class="lg:col-span-5 grid grid-cols-3 gap-2">
                     <div class="lg:col-span-3 dash-card p-3 flex items-center justify-between border-l-4 border-blue-500">
                         <div>
@@ -288,7 +288,7 @@
             <!-- BOTTOM SECTION: DONUT, HISTOGRAM, TOP/BOTTOM 10 -->
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4">
                 
-                <!-- DONUT GRAPH PASS/UNPASS (>= 4.00) (4 Cols)[cite: 3] -->
+                <!-- DONUT GRAPH PASS/UNPASS (>= 4.00) (4 Cols) -->
                 <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base">Donut Graph Pass/Unpass</h3>
@@ -301,7 +301,7 @@
                 </div>
                 </div>
 
-                <!-- HISTOGRAM (Rate Distribution per Trip) (4 Cols)[cite: 3] -->
+                <!-- HISTOGRAM (Rate Distribution per Trip) (4 Cols) -->
                 <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base">Histogram</h3>
@@ -313,7 +313,7 @@
                     <p class="text-[11px] text-center text-slate-400">ช่วงเรทกิโลเมตรต่อลิตร (KM/L)</p>
                 </div>
 
-                <!-- TOP 10 / BOTTOM 10 (4 Cols)[cite: 3] -->
+                <!-- TOP 10 / BOTTOM 10 (4 Cols) -->
                 <div class="lg:col-span-4 dash-card p-4 flex flex-col justify-between">
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="font-bold text-slate-800 text-base">Top 10 / Bottom 10</h3>
@@ -345,28 +345,55 @@
 
             </div>
         </div>
-        <div id="page-history" class="hidden bg-slate-100/90 rounded-[1.8rem] p-4 md:p-5 shadow-inner border border-white/80 space-y-4">
-          <section class="dash-card p-4">
-            <h2 class="font-bold text-slate-800 text-lg mb-3">Filter ประวัติรายลูป</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหาเบอร์รถ / ชื่อพนักงาน</label><input id="history-search" oninput="renderHistory()" placeholder="พิมพ์เบอร์รถหรือชื่อ..." class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"></div>
-              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์รถ</label><select id="history-number" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- เบอร์รถทั้งหมด --</option></select></div>
-              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อพนักงาน</label><select id="history-driver" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- พนักงานทั้งหมด --</option></select></div>
-              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เดือน</label><select id="history-month" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2.5"><option value="ALL">-- ทุกเดือน --</option></select></div>
-              <div class="flex items-end"><button onclick="resetHistoryFilters()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-sm py-2.5 rounded-lg">รีเซ็ตตัวกรอง</button></div>
-            </div><p id="history-data-note" class="text-xs text-slate-500 mt-3">กำลังโหลดประวัติ...</p>
+        <div id="page-history" class="hidden bg-slate-100/90 rounded-[1.8rem] p-4 md:p-5 shadow-inner border border-white/80 space-y-3">
+          <section class="dash-card p-3.5">
+            <h2 class="font-bold text-slate-800 text-base mb-2">Filter ประวัติรายลูป</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2.5">
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหาเบอร์รถ / ชื่อพนักงาน</label><input id="history-search" oninput="renderHistory()" placeholder="พิมพ์เบอร์รถหรือชื่อ..." class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์รถ</label><select id="history-number" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2"><option value="ALL">-- เบอร์รถทั้งหมด --</option></select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อพนักงาน</label><select id="history-driver" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2"><option value="ALL">-- พนักงานทั้งหมด --</option></select></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">เดือน</label><select id="history-month" onchange="renderHistory()" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg p-2"><option value="ALL">-- ทุกเดือน --</option></select></div>
+              <div class="flex items-end"><button onclick="resetHistoryFilters()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-sm py-2 rounded-lg">รีเซ็ตตัวกรอง</button></div>
+            </div><p id="history-data-note" class="text-xs text-slate-500 mt-2">กำลังโหลดประวัติ...</p>
           </section>
-          <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-            <div class="dash-card p-4 border-l-4 border-blue-500"><p class="text-xs text-slate-500 font-bold">ระยะทางทั้งหมด (KM)</p><div id="history-total-km" class="text-2xl font-extrabold">0</div></div>
-            <div class="dash-card p-4 border-l-4 border-amber-400"><p class="text-xs text-slate-500 font-bold">น้ำมันทั้งหมด (ลิตร)</p><div id="history-total-fuel" class="text-2xl font-extrabold">0</div></div>
-            <div class="dash-card p-4 border-l-4 border-indigo-500"><p class="text-xs text-slate-500 font-bold">จำนวนลูป (Trip Number)</p><div id="history-total-trips" class="text-2xl font-extrabold">0</div><p id="history-type-summary" class="text-xs text-slate-500 mt-1">Full: 0 | Mixed: 0</p></div>
-            <div class="dash-card p-4 border-l-4 border-emerald-500"><p class="text-xs text-slate-500 font-bold">Rate รวม (KM/L)</p><div id="history-total-rate" class="text-2xl font-extrabold">0.00</div><p id="history-pass-status" class="text-xs font-bold mt-1">ยังไม่มีข้อมูล</p></div>
-          </section>
+          
+          <!-- เลย์เอาต์กล่องสรุปยอดและตารางรายชื่อคนขับ -->
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
+              <!-- ฝั่งซ้าย: กล่องการ์ดสรุปยอด 5 ช่อง (สลับตำแหน่งส่วนต่างน้ำมันกับจำนวนลูป และแบ่งแถว 2 เท่ากัน 50/50) -->
+              <div id="history-kpi-wrapper" class="xl:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                  <div id="history-card-km" class="dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">ระยะทางทั้งหมด (KM)</p><div id="history-total-km" class="text-xl font-extrabold mt-0.5">0</div></div>
+                  <div id="history-card-fuel" class="dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">น้ำมันทั้งหมด (ลิตร)</p><div id="history-total-fuel" class="text-xl font-extrabold mt-0.5">0</div></div>
+                  <div id="history-card-trips" class="dash-card p-3 border-l-4 border-indigo-500 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">จำนวนลูป (Trip Number)</p><div id="history-total-trips" class="text-xl font-extrabold mt-0.5">0</div><p id="history-type-summary" class="text-[10px] text-slate-500">Full: 0 | Mixed: 0</p></div>
+                  <div id="history-card-diff" class="dash-card p-3 border-l-4 border-purple-500 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">ส่วนต่างน้ำมันรวม (ลิตร)</p><div id="history-total-fuel-diff" class="text-xl font-extrabold mt-0.5">0.00</div><p id="history-fuel-diff-note" class="text-[10px] text-slate-400">(ควรใช้ - เติมจริง)</p></div>
+                  <div id="history-card-rate" class="dash-card p-3 border-l-4 border-emerald-500 flex flex-col justify-center sm:col-span-2 lg:col-span-1"><p class="text-xs text-slate-500 font-bold">Rate รวม (KM/L)</p><div id="history-total-rate" class="text-xl font-extrabold mt-0.5">0.00</div><p id="history-pass-status" class="text-xs font-bold mt-0.5">ยังไม่มีข้อมูล</p></div>
+              </div>
+
+              <!-- ฝั่งขวา: ตารางรายชื่อทั้งหมดที่ขับ -->
+              <section id="filtered-drivers-section" class="xl:col-span-4 dash-card p-3 flex flex-col justify-start hidden">
+                <h3 class="font-bold text-slate-800 text-xs mb-2 flex items-center gap-1.5 shrink-0">
+                    <i data-lucide="users" class="w-3.5 h-3.5 text-blue-600"></i> รายชื่อทั้งหมดที่ขับ
+                </h3>
+                <div class="overflow-x-auto max-w-full h-[125px] overflow-y-auto border border-slate-100 rounded-lg">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0 z-10">
+                            <tr>
+                                <th class="p-1.5 w-10 text-center">#</th>
+                                <th class="p-1.5">ชื่อพนักงาน / คนขับ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filtered-drivers-tbody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                            <!-- Dynamic Render -->
+                        </tbody>
+                    </table>
+                </div>
+              </section>
+          </div>
+
           <section id="history-chart-section" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-3">
-            <div class="dash-card p-4 lg:col-span-3 min-w-0"><h3 class="font-bold text-slate-800 text-lg">กราฟเส้น Rate รายลูป</h3><p class="text-xs text-slate-500 mb-2">คำนวณจาก KM ÷ Fuel; เส้นประสีเหลืองคือเกณฑ์มาตรฐาน; นับเฉพาะลูปการวิ่งที่สมบูรณ์ (ครั้งที่/เดือน/ปี)</p><div class="relative w-full h-[260px]"><canvas id="chartHistoryRate"></canvas></div></div>
-            <div class="dash-card p-4 lg:col-span-1 min-w-0"><h3 class="font-bold text-slate-800 text-base">ผ่าน / ไม่ผ่านเกณฑ์</h3><p class="text-xs text-slate-500 mb-2">จำนวน Trip ในผลกรอง</p><div class="relative w-full h-[260px]"><canvas id="chartHistoryPass"></canvas></div></div>
+            <div class="dash-card p-3.5 lg:col-span-3 min-w-0"><h3 class="font-bold text-slate-800 text-base">กราฟเส้น Rate รายลูป</h3><p class="text-xs text-slate-500 mb-2">คำนวณจาก KM ÷ Fuel; เส้นประสีเหลืองคือเกณฑ์มาตรฐาน; นับเฉพาะลูปการวิ่งที่สมบูรณ์ (ครั้งที่/เดือน/ปี)</p><div class="relative w-full h-[240px]"><canvas id="chartHistoryRate"></canvas></div></div>
+            <div class="dash-card p-3.5 lg:col-span-1 min-w-0"><h3 class="font-bold text-slate-800 text-base">ผ่าน / ไม่ผ่านเกณฑ์</h3><p class="text-xs text-slate-500 mb-2">จำนวน Trip ในผลกรอง</p><div class="relative w-full h-[240px]"><canvas id="chartHistoryPass"></canvas></div></div>
           </section>
-          <section class="dash-card p-4"><h3 class="font-bold text-slate-800 text-lg mb-3">ประวัติการวิ่ง</h3><div class="overflow-x-auto max-w-full"><table class="w-full text-sm text-left"><thead class="bg-blue-50 text-blue-900 text-xs"><tr><th class="p-2">Tid</th><th class="p-2">Number</th><th class="p-2 text-right">KM</th><th class="p-2 text-right">Fuel</th><th class="p-2 text-right">Rate (KM/L)</th><th class="p-2">ไป</th><th class="p-2">กลับ</th><th class="p-2">รูปแบบ</th></tr></thead><tbody id="history-table-body" class="divide-y divide-slate-100"><tr><td colspan="8" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูล</td></tr></tbody></table></div><div class="mt-3 flex justify-center"><button id="history-show-more" onclick="toggleHistoryRows()" class="hidden px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 text-sm font-bold">ดูเพิ่มเติม</button></div></section>
+          <section class="dash-card p-3.5"><h3 class="font-bold text-slate-800 text-base mb-2.5">ประวัติการวิ่ง</h3><div class="overflow-x-auto max-w-full"><table class="w-full text-sm text-left"><thead class="bg-blue-50 text-blue-900 text-xs"><tr><th class="p-2">Tid</th><th class="p-2">Number</th><th class="p-2 text-right">KM</th><th class="p-2 text-right">Fuel</th><th class="p-2 text-right">Rate (KM/L)</th><th class="p-2 text-right">ส่วนต่างน้ำมัน (ลิตร)</th><th class="p-2">ไป</th><th class="p-2">กลับ</th><th class="p-2">รูปแบบ</th></tr></thead><tbody id="history-table-body" class="divide-y divide-slate-100"><tr><td colspan="9" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูล</td></tr></tbody></table></div><div class="mt-2.5 flex justify-center"><button id="history-show-more" onclick="toggleHistoryRows()" class="hidden px-4 py-1.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-bold">ดูเพิ่มเติม</button></div></section>
         </div>
     </div>
 
@@ -882,6 +909,7 @@
         function historyFuel(r) { return Number(fieldValue(r,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0; }
         function historyRate(r) { const stored = fieldValue(r,['Rate','RATE','rate','KM/L','Km_L','KML']); const n = Number(stored); if (stored !== '' && stored != null && Number.isFinite(n)) return n; const fuel=historyFuel(r); return fuel>0 ? historyKM(r)/fuel : 0; }
         function historyStandard(r) { return getNumber(r).toUpperCase().endsWith('BF+') ? 3.70 : 4.00; }
+        function historyFuelDiff(r) { const std = historyStandard(r); return std > 0 ? (historyKM(r) / std) - historyFuel(r) : 0; }
         function historyOut(r) { return cleanValue(fieldValue(r,['ไป','Go','Outbound','Going','Route_Out'])); }
         function historyBack(r) { return cleanValue(fieldValue(r,['กลับ','Back','Return','Inbound','Route_Back'])); }
         function historyType(r) { return cleanValue(fieldValue(r,['รูปแบบ','รูปแบบการวิ่ง','Type','Trip_Type','TripType','Run_Type'])); }
@@ -906,20 +934,31 @@
             const search=cleanValue(document.getElementById('history-search')?.value).toLocaleLowerCase('th');
             const sn=document.getElementById('history-number')?.value||'ALL', sd=document.getElementById('history-driver')?.value||'ALL';
             const sm=document.getElementById('history-month')?.value||'ALL';
+            
+            const isFiltered = Boolean(search || sn !== 'ALL' || sd !== 'ALL' || sm !== 'ALL');
+            const shouldShowDriverTable = Boolean(search || sn !== 'ALL' || sd !== 'ALL');
+            
             const rows=historyData.filter(r=>{
                 const num=getNumber(r), driver=getDriver(r), month=getMonth(r);
                 return (!search||`${num} ${driver} ${historyTid(r)}`.toLocaleLowerCase('th').includes(search)) &&
                     (sn==='ALL'||num===sn) && (sd==='ALL'||driver===sd) && (sm==='ALL'||month===sm);
             });
             const km=rows.reduce((a,r)=>a+historyKM(r),0), fuel=rows.reduce((a,r)=>a+historyFuel(r),0), rate=fuel?km/fuel:0;
+            const totalFuelDiff = rows.reduce((a,r)=>a+historyFuelDiff(r),0);
+            
             document.getElementById('history-total-km').textContent=km.toLocaleString('th-TH',{maximumFractionDigits:2});
             document.getElementById('history-total-fuel').textContent=fuel.toLocaleString('th-TH',{maximumFractionDigits:2});
+            
+            const diffEl = document.getElementById('history-total-fuel-diff');
+            diffEl.textContent = (totalFuelDiff > 0 ? '+' : '') + totalFuelDiff.toLocaleString('th-TH',{minimumFractionDigits: 2, maximumFractionDigits: 2});
+            diffEl.className = 'text-xl font-extrabold mt-0.5 ' + (totalFuelDiff >= 0 ? 'text-emerald-600' : 'text-rose-600');
+            
             document.getElementById('history-total-trips').textContent=rows.length.toLocaleString('th-TH');
             document.getElementById('history-total-rate').textContent=rate.toFixed(2);
             const threshold = (sn !== 'ALL' && sd === 'ALL' && sn.toUpperCase().endsWith('BF+') ? 3.70 : 4.00);
             const status=document.getElementById('history-pass-status');
             status.textContent=rows.length?(rate>=threshold?`ผ่านเกณฑ์ (≥ ${threshold.toFixed(2)} KM/L)`:`ไม่ผ่านเกณฑ์ (< ${threshold.toFixed(2)} KM/L)`):'ยังไม่มีข้อมูล';
-            status.className='text-xs font-bold mt-1 '+(rows.length?(rate>=threshold?'text-emerald-600':'text-rose-600'):'text-slate-400');
+            status.className='text-xs font-bold mt-0.5 '+(rows.length?(rate>=threshold?'text-emerald-600':'text-rose-600'):'text-slate-400');
             const full=rows.filter(r=>/full/i.test(historyType(r))).length, mixed=rows.filter(r=>/mixed/i.test(historyType(r))).length;
             document.getElementById('history-type-summary').textContent=`Full: ${full} | Mixed: ${mixed}`;
             const note = document.getElementById('history-data-note');
@@ -927,6 +966,56 @@
             else if (!historyData.length) note.textContent = 'ตาราง Loop_Fuel_Fleet อ่านได้แต่ไม่มีแถวข้อมูล หรือไม่มีข้อมูลตามเงื่อนไข';
             else if (!historyData.some(r=>getNumber(r)) || !historyData.some(r=>getDriver(r))) note.textContent = `โหลดได้ ${historyData.length} แถว แต่ไม่พบคอลัมน์เบอร์รถหรือพนักงานที่รู้จักในตารางประวัติ กรุณาตรวจสอบชื่อคอลัมน์จริง`;
             else note.textContent = `พบข้อมูล ${rows.length.toLocaleString('th-TH')} จากทั้งหมด ${historyData.length.toLocaleString('th-TH')} ลูป`;
+            
+            // จัดการเลย์เอาต์ของกล่อง KPI และการแสดงผลตารางรายชื่อคนขับ
+            const kpiWrapper = document.getElementById('history-kpi-wrapper');
+            const cardKm = document.getElementById('history-card-km');
+            const cardFuel = document.getElementById('history-card-fuel');
+            const cardTrips = document.getElementById('history-card-trips');
+            const cardDiff = document.getElementById('history-card-diff');
+            const cardRate = document.getElementById('history-card-rate');
+            const driverSection = document.getElementById('filtered-drivers-section');
+            const driverTbody = document.getElementById('filtered-drivers-tbody');
+            
+            if (shouldShowDriverTable) {
+                // โหมดแสดงตาราง: แถวบน 3 กล่องเท่ากัน (col-span-2) | แถวล่าง 2 กล่องเท่ากันพอดี 50/50 (col-span-3)
+                kpiWrapper.className = 'xl:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5';
+                cardKm.className = 'dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center lg:col-span-2';
+                cardFuel.className = 'dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center lg:col-span-2';
+                cardTrips.className = 'dash-card p-3 border-l-4 border-indigo-500 flex flex-col justify-center lg:col-span-2';
+                cardDiff.className = 'dash-card p-3 border-l-4 border-purple-500 flex flex-col justify-center lg:col-span-3';
+                cardRate.className = 'dash-card p-3 border-l-4 border-emerald-500 flex flex-col justify-center sm:col-span-2 lg:col-span-3';
+                driverSection.classList.remove('hidden');
+                
+                const driverSet = new Set();
+                rows.forEach(r => {
+                    const outDriver = historyOut(r) || getDriver(r);
+                    const backDriver = historyBack(r);
+                    if (outDriver && outDriver !== '-') driverSet.add(outDriver);
+                    if (backDriver && backDriver !== '-') driverSet.add(backDriver);
+                });
+                const uniqueDrivers = [...driverSet].sort((a,b)=>a.localeCompare(b,'th'));
+                if (uniqueDrivers.length > 0) {
+                    driverTbody.innerHTML = uniqueDrivers.map((d, idx) => `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-1.5 text-center text-slate-400">${idx + 1}</td>
+                            <td class="p-1.5 font-semibold text-slate-700">${escapeHtml(d)}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    driverTbody.innerHTML = '<tr><td colspan="2" class="p-2 text-center text-slate-400">ไม่พบรายชื่อคนขับในผลการกรองนี้</td></tr>';
+                }
+            } else {
+                // โหมดซ่อนตาราง: ขยายการ์ดสรุปทั้ง 5 ใบเต็มแถวเดียวกันพอดี
+                kpiWrapper.className = 'xl:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5';
+                cardKm.className = 'dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center';
+                cardFuel.className = 'dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center';
+                cardTrips.className = 'dash-card p-3 border-l-4 border-indigo-500 flex flex-col justify-center';
+                cardDiff.className = 'dash-card p-3 border-l-4 border-purple-500 flex flex-col justify-center';
+                cardRate.className = 'dash-card p-3 border-l-4 border-emerald-500 flex flex-col justify-center sm:col-span-2 lg:col-span-1';
+                driverSection.classList.add('hidden');
+            }
+
             const tbody=document.getElementById('history-table-body');
             const sortedRows = [...rows].sort((a,b)=>historySortValue(b).localeCompare(historySortValue(a),'th',{numeric:true}));
             const displayRows = historyShowAll ? sortedRows : sortedRows.slice(0,10);
@@ -934,10 +1023,11 @@
             if (moreButton) { moreButton.classList.toggle('hidden', rows.length <= 10); moreButton.textContent = historyShowAll ? 'ย่อเหลือ 10 Trip ล่าสุด' : `ดูเพิ่มเติม (${Math.max(0, rows.length-10)} Trip)`; }
             tbody.innerHTML=displayRows.length?displayRows.map(r=>{
                 const type=historyType(r), good=historyFuel(r)>0&&historyKM(r)/historyFuel(r)>=standardForRow(r);
-                return `<tr class="hover:bg-blue-50/70"><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(historyTid(r)||'-')}</td><td class="p-2 whitespace-nowrap font-semibold">${escapeHtml(getNumber(r)||'-')}</td><td class="p-2 text-right">${historyKM(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right">${historyFuel(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right font-semibold ${historyRate(r)>=historyStandard(r)?'text-emerald-600':'text-rose-600'}">${historyRate(r).toFixed(2)}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyOut(r)||getDriver(r)||'-')}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyBack(r)||'-')}</td><td class="p-2 whitespace-nowrap"><span class="px-2 py-1 rounded-full text-xs font-bold ${/full/i.test(type)?'bg-emerald-100 text-emerald-700':/mixed/i.test(type)?'bg-amber-100 text-amber-800':(good?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700')}">${escapeHtml(type||'-')}</span></td></tr>`;
-            }).join(''):'<tr><td colspan="8" class="p-4 text-center text-slate-400">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
+                const diff = historyFuelDiff(r);
+                const diffText = (diff > 0 ? '+' : '') + diff.toLocaleString('th-TH',{minimumFractionDigits: 2, maximumFractionDigits: 2});
+                return `<tr class="hover:bg-blue-50/70"><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(historyTid(r)||'-')}</td><td class="p-2 whitespace-nowrap font-semibold">${escapeHtml(getNumber(r)||'-')}</td><td class="p-2 text-right">${historyKM(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right">${historyFuel(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right font-semibold ${historyRate(r)>=historyStandard(r)?'text-emerald-600':'text-rose-600'}">${historyRate(r).toFixed(2)}</td><td class="p-2 text-right font-semibold ${diff>=0?'text-emerald-600':'text-rose-600'}">${diffText}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyOut(r)||getDriver(r)||'-')}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyBack(r)||'-')}</td><td class="p-2 whitespace-nowrap"><span class="px-2 py-1 rounded-full text-xs font-bold ${/full/i.test(type)?'bg-emerald-100 text-emerald-700':/mixed/i.test(type)?'bg-amber-100 text-amber-800':(good?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700')}">${escapeHtml(type||'-')}</span></td></tr>`;
+            }).join(''):'<tr><td colspan="9" class="p-4 text-center text-slate-400">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
             note.textContent += ` | แสดงประวัติล่าสุด ${displayRows.length} Trip จาก ${rows.length} Trip ที่ตรงตัวกรอง`;
-            const isFiltered = Boolean(search || sn !== 'ALL' || sd !== 'ALL' || sm !== 'ALL');
             renderHistoryChart(rows, isFiltered);
         }
         function toggleHistoryRows() { historyShowAll = !historyShowAll; renderHistory(); }
