@@ -227,15 +227,16 @@
                 
                 <!-- LEFT: BAR CHART MONTH (Rate แยกรายเดือน) (7 Cols) -->
                 <div class="lg:col-span-7 dash-card p-4 flex flex-col justify-between">
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
                         <div>
-                            <h3 id="month-chart-title" class="font-bold text-slate-800 text-lg">Bar Chart month (Rate รายเดือน)</h3>
+                            <h3 id="month-chart-title" class="font-bold text-slate-800 text-base md:text-lg">Bar Chart month (Rate รายเดือน)</h3>
                             <p id="month-chart-description" class="text-xs text-slate-400">อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน</p>
                         </div>
-                        <div class="inline-flex shrink-0 rounded-lg bg-slate-100 p-1 gap-1" role="group" aria-label="เลือกข้อมูลกราฟรายเดือน">
+                        <div class="inline-flex shrink-0 rounded-lg bg-slate-100 p-1 gap-1 flex-wrap" role="group" aria-label="เลือกข้อมูลกราฟรายเดือน">
                             <button type="button" data-month-metric="rate" onclick="setMonthChartMetric('rate')" aria-pressed="true" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition bg-blue-600 text-white shadow-sm">Rate</button>
                             <button type="button" data-month-metric="distance" onclick="setMonthChartMetric('distance')" aria-pressed="false" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white">Distance</button>
                             <button type="button" data-month-metric="fuel" onclick="setMonthChartMetric('fuel')" aria-pressed="false" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white">Fuel</button>
+                            <button type="button" data-month-metric="diff" onclick="setMonthChartMetric('diff')" aria-pressed="false" class="month-metric-btn px-2 py-1.5 rounded-md text-xs font-semibold transition text-slate-600 hover:bg-white">Fuel Diff</button>
                         </div>
                     </div>
                     <div class="relative w-full h-[240px]">
@@ -259,7 +260,10 @@
                     <div class="lg:col-span-3 dash-card p-3 flex items-center justify-between border-l-4 border-amber-500">
                         <div>
                             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Fuel (ปริมาณน้ำมันรวม)</p>
-                            <h4 id="kpi-fuel" class="text-2xl font-extrabold text-slate-800 mt-1">0</h4>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <h4 id="kpi-fuel" class="text-2xl font-extrabold text-slate-800">0</h4>
+                                <span id="kpi-fuel-diff-sub" class="text-xs font-semibold text-emerald-600">(+0.00 ลิตร)</span>
+                            </div>
                             <span class="text-xs text-slate-400">ลิตร (Liters)</span>
                         </div>
                         <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
@@ -359,7 +363,7 @@
           
           <!-- เลย์เอาต์กล่องสรุปยอดและตารางรายชื่อคนขับ -->
           <div class="grid grid-cols-1 xl:grid-cols-12 gap-3 items-stretch">
-              <!-- ฝั่งซ้าย: กล่องการ์ดสรุปยอด 5 ช่อง (สลับตำแหน่งส่วนต่างน้ำมันกับจำนวนลูป และแบ่งแถว 2 เท่ากัน 50/50) -->
+              <!-- ฝั่งซ้าย: กล่องการ์ดสรุปยอด 5 ช่อง -->
               <div id="history-kpi-wrapper" class="xl:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                   <div id="history-card-km" class="dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">ระยะทางทั้งหมด (KM)</p><div id="history-total-km" class="text-xl font-extrabold mt-0.5">0</div></div>
                   <div id="history-card-fuel" class="dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center"><p class="text-xs text-slate-500 font-bold">น้ำมันทั้งหมด (ลิตร)</p><div id="history-total-fuel" class="text-xl font-extrabold mt-0.5">0</div></div>
@@ -393,7 +397,32 @@
             <div class="dash-card p-3.5 lg:col-span-3 min-w-0"><h3 class="font-bold text-slate-800 text-base">กราฟเส้น Rate รายลูป</h3><p class="text-xs text-slate-500 mb-2">คำนวณจาก KM ÷ Fuel; เส้นประสีเหลืองคือเกณฑ์มาตรฐาน; นับเฉพาะลูปการวิ่งที่สมบูรณ์ (ครั้งที่/เดือน/ปี)</p><div class="relative w-full h-[240px]"><canvas id="chartHistoryRate"></canvas></div></div>
             <div class="dash-card p-3.5 lg:col-span-1 min-w-0"><h3 class="font-bold text-slate-800 text-base">ผ่าน / ไม่ผ่านเกณฑ์</h3><p class="text-xs text-slate-500 mb-2">จำนวน Trip ในผลกรอง</p><div class="relative w-full h-[240px]"><canvas id="chartHistoryPass"></canvas></div></div>
           </section>
-          <section class="dash-card p-3.5"><h3 class="font-bold text-slate-800 text-base mb-2.5">ประวัติการวิ่ง</h3><div class="overflow-x-auto max-w-full"><table class="w-full text-sm text-left"><thead class="bg-blue-50 text-blue-900 text-xs"><tr><th class="p-2">Tid</th><th class="p-2">Number</th><th class="p-2 text-right">KM</th><th class="p-2 text-right">Fuel</th><th class="p-2 text-right">Rate (KM/L)</th><th class="p-2 text-right">ส่วนต่างน้ำมัน (ลิตร)</th><th class="p-2">ไป</th><th class="p-2">กลับ</th><th class="p-2">รูปแบบ</th></tr></thead><tbody id="history-table-body" class="divide-y divide-slate-100"><tr><td colspan="9" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูล</td></tr></tbody></table></div><div class="mt-2.5 flex justify-center"><button id="history-show-more" onclick="toggleHistoryRows()" class="hidden px-4 py-1.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-bold">ดูเพิ่มเติม</button></div></section>
+          <section class="dash-card p-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+              <h3 class="font-bold text-slate-800 text-base">ประวัติการวิ่ง</h3>
+              <span class="text-[11px] text-slate-400">คลิกที่หัวคอลัมน์ Tid, เดือน, Rate หรือ ส่วนต่างน้ำมัน เพื่อเรียงลำดับ</span>
+            </div>
+            <div class="overflow-x-auto max-w-full">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-blue-50 text-blue-900 text-xs select-none">
+                  <tr>
+                    <th class="p-2"><button type="button" onclick="toggleHistorySort('tid')" class="inline-flex items-center gap-1 font-bold hover:text-blue-600 transition"><span>Tid</span><span id="sort-icon-tid" class="text-[10px]">↕</span></button></th>
+                    <th class="p-2">Number</th>
+                    <th class="p-2"><button type="button" onclick="toggleHistorySort('month')" class="inline-flex items-center gap-1 font-bold hover:text-blue-600 transition"><span>เดือน</span><span id="sort-icon-month" class="text-[10px]">↕</span></button></th>
+                    <th class="p-2 text-right">KM</th>
+                    <th class="p-2 text-right">Fuel</th>
+                    <th class="p-2 text-right"><button type="button" onclick="toggleHistorySort('rate')" class="inline-flex items-center justify-end gap-1 font-bold hover:text-blue-600 transition w-full"><span>Rate (KM/L)</span><span id="sort-icon-rate" class="text-[10px]">↕</span></button></th>
+                    <th class="p-2 text-right"><button type="button" onclick="toggleHistorySort('diff')" class="inline-flex items-center justify-end gap-1 font-bold hover:text-blue-600 transition w-full"><span>ส่วนต่างน้ำมัน (ลิตร)</span><span id="sort-icon-diff" class="text-[10px]">↕</span></button></th>
+                    <th class="p-2">ไป</th>
+                    <th class="p-2">กลับ</th>
+                    <th class="p-2">รูปแบบ</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-slate-100"><tr><td colspan="10" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูล</td></tr></tbody>
+              </table>
+            </div>
+            <div class="mt-2.5 flex justify-center"><button id="history-show-more" onclick="toggleHistoryRows()" class="hidden px-4 py-1.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-bold">ดูเพิ่มเติม</button></div>
+          </section>
         </div>
     </div>
 
@@ -405,7 +434,7 @@
         let monthChartMetric = 'rate';
 
         function setMonthChartMetric(metric) {
-            if (!['rate', 'distance', 'fuel'].includes(metric)) return;
+            if (!['rate', 'distance', 'fuel', 'diff'].includes(metric)) return;
             monthChartMetric = metric;
             document.querySelectorAll('[data-month-metric]').forEach(button => {
                 const active = button.dataset.monthMetric === metric;
@@ -424,6 +453,8 @@
         let chartHistoryPassRef = null;
         let historyFetchError = '';
         let historyShowAll = false;
+        let historySortField = 'default'; // 'default' | 'tid' | 'month' | 'rate' | 'diff'
+        let historySortDir = 'desc'; // 'asc' | 'desc'
         let chartStatusFilter = null; // null | 'pass' | 'unpass'
         let histogramBinFilter = null; // {min,max,label}
 
@@ -635,9 +666,74 @@
                 if (/^\d{4}\d{2}$/.test(compact)) return `${compact.slice(0,4)}-${compact.slice(4,6)}`;
             }
             const tid = cleanValue(fieldValue(row, ['Tid','TID','tid','Trip_ID','TripID']));
+            const parsedTid = parseTidParts(tid);
+            if (parsedTid.month && parsedTid.year) return `${parsedTid.month}${parsedTid.year}`;
             const match = tid.match(/(?:^|[_-])(\d{4})(?:[_-]|$)/);
             if (match) return match[1];
             return '';
+        }
+        function parseTidParts(tid) {
+            const raw = cleanValue(tid);
+            // รูปแบบเช่น T4-006-BG+_150969 -> prefix: T, bus: 4-006-BG+, code: 150969 (run=15, month=09, year=69)
+            const m = raw.match(/^([A-Za-z]+)?([^_]+)_(\d{2})(\d{2})(\d{2})(.*)$/);
+            if (m) {
+                return {
+                    raw,
+                    prefix: m[1] || '',
+                    bus: m[2] || '',
+                    run: Number(m[3]) || 0,
+                    month: m[4] || '',
+                    year: m[5] || '',
+                    suffix: m[6] || '',
+                    validDateCode: true
+                };
+            }
+            const m6 = raw.match(/_(\d{6})(?:_|$)/);
+            if (m6) {
+                const code = m6[1];
+                return {
+                    raw,
+                    prefix: '',
+                    bus: raw.split('_')[0] || '',
+                    run: Number(code.slice(0, 2)) || 0,
+                    month: code.slice(2, 4),
+                    year: code.slice(4, 6),
+                    suffix: '',
+                    validDateCode: true
+                };
+            }
+            return {
+                raw,
+                prefix: '',
+                bus: raw,
+                run: 0,
+                month: '',
+                year: '',
+                suffix: '',
+                validDateCode: false
+            };
+        }
+        function getRowMonthSortKey(r) {
+            const tidParts = parseTidParts(historyTid(r));
+            if (tidParts.validDateCode && tidParts.month) {
+                const yr = tidParts.year || '00';
+                return `${yr}-${tidParts.month}-${String(tidParts.run).padStart(4, '0')}`;
+            }
+            const m = getMonth(r);
+            if (/^\d{4}$/.test(m)) {
+                // รูปแบบ MMYY เช่น 0969 -> ปี 69 เดือน 09
+                return `${m.slice(2, 4)}-${m.slice(0, 2)}-0000`;
+            }
+            return m || '0000-00-0000';
+        }
+        function getRowMonthLabel(r) {
+            const tidParts = parseTidParts(historyTid(r));
+            if (tidParts.validDateCode && tidParts.month) {
+                return `${tidParts.month}/${tidParts.year}`;
+            }
+            const m = getMonth(r);
+            if (/^\d{4}$/.test(m)) return `${m.slice(0, 2)}/${m.slice(2, 4)}`;
+            return m || '-';
         }
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -668,13 +764,20 @@
         }
 
         function itemRate(item) { const stored = fieldValue(item,['Rate','RATE','rate','KM/L','Km_L','KML']); const n = Number(stored); if (stored !== '' && stored != null && Number.isFinite(n)) return n; const km = Number(fieldValue(item,['KM','Km','km'])) || 0; const fuel = Number(fieldValue(item,['Fuel','FUEL','fuel'])) || 0; return fuel > 0 ? km / fuel : 0; }
-        function standardForRow(item) {
+        function itemStandard(item) {
             const selectedNumber = cleanValue(document.getElementById('filter-number')?.value || 'ALL').toUpperCase();
             const selectedDriver = cleanValue(document.getElementById('filter-driver')?.value || 'ALL');
             if (selectedDriver !== 'ALL') return 4.00;
             if (selectedNumber !== 'ALL') return selectedNumber.endsWith('BF+') ? 3.70 : 4.00;
             return getNumber(item).toUpperCase().endsWith('BF+') ? 3.70 : 4.00;
         }
+        function itemFuelDiff(item) {
+            const std = itemStandard(item);
+            const km = Number(fieldValue(item,['KM','Km','km','Distance','ระยะทาง'])) || 0;
+            const fuel = Number(fieldValue(item,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0;
+            return std > 0 ? (km / std) - fuel : 0;
+        }
+        function standardForRow(item) { return itemStandard(item); }
         function clearChartClickFilters() { chartStatusFilter = null; histogramBinFilter = null; }
         function renderDashboardData() {
             calculateKPIs();
@@ -714,12 +817,20 @@
         function calculateKPIs() {
             const totalDistance = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['KM','Km','km','Distance','ระยะทาง'])) || 0), 0);
             const totalFuel = filteredData.reduce((acc, curr) => acc + (Number(fieldValue(curr,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0), 0);
+            const totalFuelDiff = filteredData.reduce((acc, curr) => acc + itemFuelDiff(curr), 0);
             const totalTrips = filteredData.length;
             const overallRate = totalFuel > 0 ? (totalDistance / totalFuel) : 0;
             const gpsAdjustedRate = totalFuel > 0 ? (totalDistance * 1.0356 / totalFuel) : 0;
 
             document.getElementById('kpi-distance').innerText = totalDistance.toLocaleString('th-TH');
             document.getElementById('kpi-fuel').innerText = totalFuel.toLocaleString('th-TH', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+            
+            const subDiffEl = document.getElementById('kpi-fuel-diff-sub');
+            if (subDiffEl) {
+                subDiffEl.textContent = `(${totalFuelDiff > 0 ? '+' : ''}${totalFuelDiff.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ลิตร)`;
+                subDiffEl.className = `text-xs font-bold ${totalFuelDiff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+            }
+
             document.getElementById('kpi-trips').innerText = totalTrips.toLocaleString('th-TH');
             
             const rateElem = document.getElementById('card-rate-value');
@@ -737,6 +848,41 @@
             }
         }
 
+        function getDiffAxisConfig(values) {
+            const nums = (values || []).filter(v => Number.isFinite(v));
+            const minVal = nums.length ? Math.min(...nums) : 0;
+            const maxVal = nums.length ? Math.max(...nums) : 0;
+            const maxAbs = Math.max(Math.abs(minVal), Math.abs(maxVal));
+
+            let stepSize = 5000;
+            if (maxAbs <= 600) stepSize = 100;
+            else if (maxAbs <= 1500) stepSize = 200;
+            else if (maxAbs <= 3500) stepSize = 500;
+            else if (maxAbs <= 10000) stepSize = 1000;
+            else if (maxAbs <= 20000) stepSize = 2000;
+            else stepSize = 5000;
+
+            let yMin = minVal < 0 ? Math.floor((minVal - stepSize * 0.25) / stepSize) * stepSize : 0;
+            let yMax = maxVal > 0 ? Math.ceil((maxVal + stepSize * 0.25) / stepSize) * stepSize : 0;
+
+            if (stepSize === 5000 && minVal >= -40000 && maxAbs > 10000) {
+                yMin = Math.min(yMin, -40000);
+            }
+            if (yMin === yMax) {
+                yMin = -stepSize;
+                yMax = stepSize;
+            }
+
+            return {
+                min: yMin,
+                max: yMax,
+                ticks: {
+                    stepSize,
+                    callback: v => Number(v).toLocaleString('th-TH')
+                }
+            };
+        }
+
         const chartValueLabels = {
             id: 'chartValueLabels',
             afterDatasetsDraw(chart) {
@@ -748,9 +894,9 @@
                         const value = Number(chart.data.datasets[0].data[i]);
                         if (!Number.isFinite(value)) return;
                         const metric = chart.$monthMetric || 'rate';
-                        let label = metric === 'rate' ? value.toFixed(2) : value.toLocaleString('th-TH', {maximumFractionDigits: 0});
+                        let label = metric === 'rate' ? value.toFixed(2) : (metric === 'diff' ? (value > 0 ? '+' : '') + value.toLocaleString('th-TH', {maximumFractionDigits: 1}) : value.toLocaleString('th-TH', {maximumFractionDigits: 0}));
                         const changes = chart.$monthChanges || [];
-                        if (i > 0 && changes[i] != null) label += ` (${changes[i] > 0 ? '+' : ''}${changes[i].toFixed(1)}%)`;
+                        if (metric === 'rate' && i > 0 && changes[i] != null) label += ` (${changes[i] > 0 ? '+' : ''}${changes[i].toFixed(1)}%)`;
                         ctx.fillText(label, bar.x, Math.max(bar.y - 7, 12));
                     });
                 } else if (chart.config.type === 'doughnut') {
@@ -773,7 +919,8 @@
             const metricConfig = {
                 rate: { title: 'Bar Chart month (Rate รายเดือน)', description: 'อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน', label: 'Rate (KM/L)', color: '#2563EB' },
                 distance: { title: 'Bar Chart month (Distance รายเดือน)', description: 'ระยะทางรวม (KM) แยกตามแต่ละเดือน', label: 'Distance (KM)', color: '#0D9488' },
-                fuel: { title: 'Bar Chart month (Fuel รายเดือน)', description: 'ปริมาณน้ำมันรวม (ลิตร) แยกตามแต่ละเดือน', label: 'Fuel (Liters)', color: '#D97706' }
+                fuel: { title: 'Bar Chart month (Fuel รายเดือน)', description: 'ปริมาณน้ำมันรวม (ลิตร) แยกตามแต่ละเดือน', label: 'Fuel (Liters)', color: '#D97706' },
+                diff: { title: 'Bar Chart month (Fuel Diff รายเดือน)', description: 'ยอดส่วนต่างน้ำมันรวม (ลิตร) แยกตามแต่ละเดือน', label: 'Fuel Diff (Liters)', color: '#7C3AED' }
             }[metric] || { title: 'Bar Chart month (Rate รายเดือน)', description: 'อัตราสิ้นเปลืองเฉลี่ย (KM/L) แยกตามแต่ละเดือน', label: 'Rate (KM/L)', color: '#2563EB' };
             const titleEl = document.getElementById('month-chart-title');
             const descriptionEl = document.getElementById('month-chart-description');
@@ -783,32 +930,44 @@
             const monthMap = {};
             filteredData.forEach(item => {
                 const m = getMonth(item) || '0000';
-                if (!monthMap[m]) monthMap[m] = { km: 0, fuel: 0 };
+                if (!monthMap[m]) monthMap[m] = { km: 0, fuel: 0, diff: 0 };
                 monthMap[m].km += Number(fieldValue(item,['KM','Km','km','Distance','ระยะทาง'])) || 0;
                 monthMap[m].fuel += Number(fieldValue(item,['Fuel','FUEL','fuel','Liters','น้ำมัน'])) || 0;
+                monthMap[m].diff += itemFuelDiff(item);
             });
             const sortedMonths = Object.keys(monthMap).sort();
             const values = sortedMonths.map(m => {
                 const g = monthMap[m];
                 if (metric === 'distance') return g.km;
                 if (metric === 'fuel') return g.fuel;
+                if (metric === 'diff') return g.diff;
                 return g.fuel > 0 ? g.km / g.fuel : 0;
             });
             const changes = values.map((value, i) => i === 0 || values[i-1] === 0 ? null : ((value-values[i-1])/Math.abs(values[i-1]))*100);
+            
+            const yAxisOptions = metric === 'diff' ? getDiffAxisConfig(values) : { beginAtZero: true };
+
             if (chartMonthRateRef) chartMonthRateRef.destroy();
             chartMonthRateRef = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: sortedMonths.map(m => `เดือน ${m}`), datasets: [{ label: metricConfig.label, data: values, backgroundColor: metricConfig.color, borderRadius: 6 }] },
+                data: { labels: sortedMonths.map(m => `เดือน ${m}`), datasets: [{ label: metricConfig.label, data: values, backgroundColor: metric === 'diff' ? values.map(v => v >= 0 ? '#10B981' : '#EF4444') : metricConfig.color, borderRadius: 6 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false, layout: { padding: { top: 30 } },
                     plugins: {
                         legend: { display: false },
                         tooltip: { callbacks: {
                             label: c => metric === 'rate' ? `${metricConfig.label}: ${Number(c.raw).toFixed(2)}` : `${metricConfig.label}: ${Number(c.raw).toLocaleString('th-TH', {maximumFractionDigits: 2})}`,
-                            afterLabel: c => { const i=c.dataIndex, ch=changes[i]; return i===0 || ch==null ? 'เทียบเดือนก่อนหน้า: —' : `เทียบเดือนก่อนหน้า: ${ch>0?'+':''}${ch.toFixed(1)}%`; }
+                            afterLabel: c => {
+                                if (metric !== 'rate') return '';
+                                const i=c.dataIndex, ch=changes[i];
+                                return i===0 || ch==null ? 'เทียบเดือนก่อนหน้า: —' : `เทียบเดือนก่อนหน้า: ${ch>0?'+':''}${ch.toFixed(1)}%`;
+                            }
                         } }
                     },
-                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+                    scales: { 
+                        x: { grid: { display: false } }, 
+                        y: yAxisOptions
+                    },
                     onClick: (event, elements) => { if (!elements.length) return; const m=sortedMonths[elements[0].index]; document.getElementById('filter-month').value=m; clearChartClickFilters(); applyFilters(); }
                 },
                 plugins: [{...chartValueLabels, afterDatasetsDraw(chart) { chart.$monthChanges = changes; chart.$monthMetric = metric; chartValueLabels.afterDatasetsDraw(chart); }}]
@@ -930,6 +1089,30 @@
             document.getElementById('history-month').value='ALL';
             renderHistory();
         }
+        function toggleHistorySort(field) {
+            if (historySortField === field) {
+                historySortDir = historySortDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                historySortField = field;
+                historySortDir = (field === 'tid' || field === 'month') ? 'asc' : 'desc';
+            }
+            updateHistorySortIcons();
+            renderHistory();
+        }
+        function updateHistorySortIcons() {
+            const fields = ['tid', 'month', 'rate', 'diff'];
+            fields.forEach(f => {
+                const iconEl = document.getElementById(`sort-icon-${f}`);
+                if (!iconEl) return;
+                if (historySortField !== f) {
+                    iconEl.textContent = '↕';
+                    iconEl.className = 'text-[10px] text-blue-400';
+                } else {
+                    iconEl.textContent = historySortDir === 'desc' ? '↓' : '↑';
+                    iconEl.className = 'text-xs font-extrabold text-blue-700';
+                }
+            });
+        }
         function renderHistory() {
             const search=cleanValue(document.getElementById('history-search')?.value).toLocaleLowerCase('th');
             const sn=document.getElementById('history-number')?.value||'ALL', sd=document.getElementById('history-driver')?.value||'ALL';
@@ -978,7 +1161,6 @@
             const driverTbody = document.getElementById('filtered-drivers-tbody');
             
             if (shouldShowDriverTable) {
-                // โหมดแสดงตาราง: แถวบน 3 กล่องเท่ากัน (col-span-2) | แถวล่าง 2 กล่องเท่ากันพอดี 50/50 (col-span-3)
                 kpiWrapper.className = 'xl:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5';
                 cardKm.className = 'dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center lg:col-span-2';
                 cardFuel.className = 'dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center lg:col-span-2';
@@ -1006,7 +1188,6 @@
                     driverTbody.innerHTML = '<tr><td colspan="2" class="p-2 text-center text-slate-400">ไม่พบรายชื่อคนขับในผลการกรองนี้</td></tr>';
                 }
             } else {
-                // โหมดซ่อนตาราง: ขยายการ์ดสรุปทั้ง 5 ใบเต็มแถวเดียวกันพอดี
                 kpiWrapper.className = 'xl:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5';
                 cardKm.className = 'dash-card p-3 border-l-4 border-blue-500 flex flex-col justify-center';
                 cardFuel.className = 'dash-card p-3 border-l-4 border-amber-400 flex flex-col justify-center';
@@ -1016,8 +1197,37 @@
                 driverSection.classList.add('hidden');
             }
 
+            updateHistorySortIcons();
             const tbody=document.getElementById('history-table-body');
-            const sortedRows = [...rows].sort((a,b)=>historySortValue(b).localeCompare(historySortValue(a),'th',{numeric:true}));
+            const sortedRows = [...rows].sort((a,b)=>{
+                const factor = historySortDir === 'asc' ? 1 : -1;
+                if (historySortField === 'tid') {
+                    const pa = parseTidParts(historyTid(a));
+                    const pb = parseTidParts(historyTid(b));
+                    if (pa.validDateCode && pb.validDateCode) {
+                        const keyA = `${pa.year}-${pa.month}-${String(pa.run).padStart(4, '0')}`;
+                        const keyB = `${pb.year}-${pb.month}-${String(pb.run).padStart(4, '0')}`;
+                        const cmp = keyA.localeCompare(keyB, 'th', { numeric: true });
+                        if (cmp !== 0) return cmp * factor;
+                        return pa.bus.localeCompare(pb.bus, 'th', { numeric: true }) * factor;
+                    }
+                    return historyTid(a).localeCompare(historyTid(b), 'th', { numeric: true }) * factor;
+                }
+                if (historySortField === 'month') {
+                    const mkA = getRowMonthSortKey(a);
+                    const mkB = getRowMonthSortKey(b);
+                    const cmp = mkA.localeCompare(mkB, 'th', { numeric: true });
+                    if (cmp !== 0) return cmp * factor;
+                    return historyTid(a).localeCompare(historyTid(b), 'th', { numeric: true }) * factor;
+                }
+                if (historySortField === 'rate') {
+                    return (historyRate(a) - historyRate(b)) * factor;
+                }
+                if (historySortField === 'diff') {
+                    return (historyFuelDiff(a) - historyFuelDiff(b)) * factor;
+                }
+                return historySortValue(b).localeCompare(historySortValue(a),'th',{numeric:true});
+            });
             const displayRows = historyShowAll ? sortedRows : sortedRows.slice(0,10);
             const moreButton = document.getElementById('history-show-more');
             if (moreButton) { moreButton.classList.toggle('hidden', rows.length <= 10); moreButton.textContent = historyShowAll ? 'ย่อเหลือ 10 Trip ล่าสุด' : `ดูเพิ่มเติม (${Math.max(0, rows.length-10)} Trip)`; }
@@ -1025,8 +1235,8 @@
                 const type=historyType(r), good=historyFuel(r)>0&&historyKM(r)/historyFuel(r)>=standardForRow(r);
                 const diff = historyFuelDiff(r);
                 const diffText = (diff > 0 ? '+' : '') + diff.toLocaleString('th-TH',{minimumFractionDigits: 2, maximumFractionDigits: 2});
-                return `<tr class="hover:bg-blue-50/70"><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(historyTid(r)||'-')}</td><td class="p-2 whitespace-nowrap font-semibold">${escapeHtml(getNumber(r)||'-')}</td><td class="p-2 text-right">${historyKM(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right">${historyFuel(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right font-semibold ${historyRate(r)>=historyStandard(r)?'text-emerald-600':'text-rose-600'}">${historyRate(r).toFixed(2)}</td><td class="p-2 text-right font-semibold ${diff>=0?'text-emerald-600':'text-rose-600'}">${diffText}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyOut(r)||getDriver(r)||'-')}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyBack(r)||'-')}</td><td class="p-2 whitespace-nowrap"><span class="px-2 py-1 rounded-full text-xs font-bold ${/full/i.test(type)?'bg-emerald-100 text-emerald-700':/mixed/i.test(type)?'bg-amber-100 text-amber-800':(good?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700')}">${escapeHtml(type||'-')}</span></td></tr>`;
-            }).join(''):'<tr><td colspan="9" class="p-4 text-center text-slate-400">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
+                return `<tr class="hover:bg-blue-50/70"><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(historyTid(r)||'-')}</td><td class="p-2 whitespace-nowrap font-semibold">${escapeHtml(getNumber(r)||'-')}</td><td class="p-2 whitespace-nowrap text-slate-600">${escapeHtml(getRowMonthLabel(r))}</td><td class="p-2 text-right">${historyKM(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right">${historyFuel(r).toLocaleString('th-TH',{maximumFractionDigits:2})}</td><td class="p-2 text-right font-semibold ${historyRate(r)>=historyStandard(r)?'text-emerald-600':'text-rose-600'}">${historyRate(r).toFixed(2)}</td><td class="p-2 text-right font-semibold ${diff>=0?'text-emerald-600':'text-rose-600'}">${diffText}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyOut(r)||getDriver(r)||'-')}</td><td class="p-2 min-w-[100px]">${escapeHtml(historyBack(r)||'-')}</td><td class="p-2 whitespace-nowrap"><span class="px-2 py-1 rounded-full text-xs font-bold ${/full/i.test(type)?'bg-emerald-100 text-emerald-700':/mixed/i.test(type)?'bg-amber-100 text-amber-800':(good?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700')}">${escapeHtml(type||'-')}</span></td></tr>`;
+            }).join(''):'<tr><td colspan="10" class="p-4 text-center text-slate-400">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
             note.textContent += ` | แสดงประวัติล่าสุด ${displayRows.length} Trip จาก ${rows.length} Trip ที่ตรงตัวกรอง`;
             renderHistoryChart(rows, isFiltered);
         }
